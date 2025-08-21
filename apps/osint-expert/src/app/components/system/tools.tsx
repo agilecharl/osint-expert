@@ -12,7 +12,7 @@ export interface Tool {
 export const Tools: React.FC = () => {
   const [tools, setTools] = useState<Tool[]>([]);
   const [page, setPage] = useState(1);
-  const pageSize = 10;
+  const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
     const getDefaultData = async () => {
@@ -32,6 +32,37 @@ export const Tools: React.FC = () => {
     <>
       <h2>System Tools</h2>
       <br />
+      <div
+        style={{
+          marginBottom: '16px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+        }}
+      >
+        <label htmlFor="pageSizeSelect">Rows per page:</label>
+        <select
+          id="pageSizeSelect"
+          value={pageSize === tools.length ? 'all' : pageSize}
+          onChange={(e) => {
+            const value = e.target.value;
+            if (value === 'all') {
+              setPage(1);
+              setPageSize(tools.length);
+            } else {
+              setPage(1);
+              setPageSize(Number(value));
+            }
+          }}
+          style={{ padding: '4px 8px' }}
+        >
+          <option value={10}>10</option>
+          <option value={25}>25</option>
+          <option value={50}>50</option>
+          <option value={100}>100</option>
+          <option value="all">All</option>
+        </select>
+      </div>
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
           <tr>
@@ -68,30 +99,35 @@ export const Tools: React.FC = () => {
           </tr>
         </thead>
         <tbody>
-          {tools.slice((page - 1) * pageSize, page * pageSize).map((tool) => (
-            <tr key={tool.id} style={{ border: '1px solid #ccc' }}>
-              <td style={{ border: '1px solid #ccc', padding: '8px' }}>
-                <strong>{tool.name}</strong>
-              </td>
-              <td style={{ border: '1px solid #ccc', padding: '8px' }}>
-                {tool.description}
-              </td>
-              <td style={{ border: '1px solid #ccc', padding: '8px' }}>
-                {tool.link ? (
-                  <a
-                    href={tool.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ textDecoration: 'underline', color: '#0070f3' }}
-                  >
-                    {tool.link}
-                  </a>
-                ) : (
-                  '-'
-                )}
-              </td>
-            </tr>
-          ))}
+          {tools
+            .slice(
+              (page - 1) * pageSize,
+              pageSize === tools.length ? tools.length : page * pageSize
+            )
+            .map((tool) => (
+              <tr key={tool.id} style={{ border: '1px solid #ccc' }}>
+                <td style={{ border: '1px solid #ccc', padding: '8px' }}>
+                  <strong>{tool.name}</strong>
+                </td>
+                <td style={{ border: '1px solid #ccc', padding: '8px' }}>
+                  {tool.description}
+                </td>
+                <td style={{ border: '1px solid #ccc', padding: '8px' }}>
+                  {tool.link ? (
+                    <a
+                      href={tool.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ textDecoration: 'underline', color: '#0070f3' }}
+                    >
+                      {tool.link}
+                    </a>
+                  ) : (
+                    '-'
+                  )}
+                </td>
+              </tr>
+            ))}
         </tbody>
       </table>
       <div
@@ -102,41 +138,61 @@ export const Tools: React.FC = () => {
           gap: '8px',
         }}
       >
-        {/* MUI Buttons */}
-        {/* Make sure to import Button from @mui/material at the top of your file: import Button from '@mui/material/Button'; */}
         <Button
           variant="contained"
           onClick={() => setPage(1)}
-          disabled={page === 1}
+          disabled={page === 1 || pageSize === tools.length}
         >
           First
         </Button>
         <Button
           variant="contained"
           onClick={() => setPage((p) => Math.max(1, p - 1))}
-          disabled={page === 1}
+          disabled={page === 1 || pageSize === tools.length}
         >
           Previous
         </Button>
         <span style={{ alignSelf: 'center' }}>
-          Page {page} of {Math.ceil(tools.length / pageSize)}
+          Page {page} of{' '}
+          {pageSize === tools.length ? 1 : Math.ceil(tools.length / pageSize)}
         </span>
         <Button
           variant="contained"
           onClick={() =>
-            setPage((p) => Math.min(Math.ceil(tools.length / pageSize), p + 1))
+            setPage((p) =>
+              Math.min(
+                pageSize === tools.length
+                  ? 1
+                  : Math.ceil(tools.length / pageSize),
+                p + 1
+              )
+            )
           }
           disabled={
-            page === Math.ceil(tools.length / pageSize) || tools.length === 0
+            page ===
+              (pageSize === tools.length
+                ? 1
+                : Math.ceil(tools.length / pageSize)) ||
+            tools.length === 0 ||
+            pageSize === tools.length
           }
         >
           Next
         </Button>
         <Button
           variant="contained"
-          onClick={() => setPage(Math.ceil(tools.length / pageSize))}
+          onClick={() =>
+            setPage(
+              pageSize === tools.length ? 1 : Math.ceil(tools.length / pageSize)
+            )
+          }
           disabled={
-            page === Math.ceil(tools.length / pageSize) || tools.length === 0
+            page ===
+              (pageSize === tools.length
+                ? 1
+                : Math.ceil(tools.length / pageSize)) ||
+            tools.length === 0 ||
+            pageSize === tools.length
           }
         >
           Last
