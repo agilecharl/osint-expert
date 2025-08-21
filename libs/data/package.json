@@ -1,5 +1,5 @@
 {
-  "name": "@history-pi/data",
+  "name": "@osint-expert/data",
   "version": "0.0.1",
   "type": "module",
   "main": "./dist/index.js",
