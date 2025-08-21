@@ -1,6 +1,6 @@
 import Button from '@mui/material/Button';
 import { apiGet } from '@osint-expert/data';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export interface Tool {
   id: string;
@@ -9,11 +9,58 @@ export interface Tool {
   link?: string;
 }
 
+const REFRESH_INTERVALS = [
+  { label: '10 seconds', value: 10000 },
+  { label: '1 minute', value: 60000 },
+  { label: '5 minutes', value: 300000 },
+];
+
 export const Tools: React.FC = () => {
   const [tools, setTools] = useState<Tool[]>([]);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+
+  const [sort, setSort] = useState<{
+    key: keyof Tool;
+    direction: 'asc' | 'desc';
+  }>({
+    key: 'name',
+    direction: 'asc',
+  });
+
+  const [refreshInterval, setRefreshInterval] = useState<number>(
+    REFRESH_INTERVALS[0].value
+  );
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+
+  const fetchTools = async () => {
+    await apiGet<Tool[]>('/tools')
+      .then((data: Tool[]) => {
+        setTools(data);
+        setLastUpdate(new Date());
+      })
+      .catch((error) => {
+        console.error('Error fetching tools:', error);
+      });
+  };
+
+  useEffect(() => {
+    fetchTools();
+  }, []);
+
+  useEffect(() => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    intervalRef.current = setInterval(() => {
+      fetchTools();
+    }, refreshInterval);
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [refreshInterval]);
 
   const filteredTools = tools.filter(
     (tool) =>
@@ -21,19 +68,19 @@ export const Tools: React.FC = () => {
       tool.description.toLowerCase().includes(search.toLowerCase())
   );
 
-  useEffect(() => {
-    const getDefaultData = async () => {
-      await apiGet<Tool[]>('/tools')
-        .then((data: Tool[]) => {
-          setTools(data);
-        })
-        .catch((error) => {
-          console.error('Error fetching tools:', error);
-        });
-    };
-
-    getDefaultData();
-  }, []);
+  const sortedTools = [...filteredTools].sort((a, b) => {
+    const key = sort.key;
+    const aValue = a[key] ?? '';
+    const bValue = b[key] ?? '';
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      if (sort.direction === 'asc') {
+        return aValue.localeCompare(bValue);
+      } else {
+        return bValue.localeCompare(aValue);
+      }
+    }
+    return 0;
+  });
 
   return (
     <>
@@ -89,6 +136,48 @@ export const Tools: React.FC = () => {
           <option value="all">All</option>
         </select>
       </div>
+      <div
+        style={{
+          marginBottom: '16px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+        }}
+      >
+        <Button variant="contained" onClick={fetchTools}>
+          Refresh
+        </Button>
+        <label htmlFor="refreshIntervalSelect">Auto-refresh interval:</label>
+        <select
+          id="refreshIntervalSelect"
+          value={refreshInterval}
+          onChange={(e) => setRefreshInterval(Number(e.target.value))}
+          style={{ padding: '4px 8px' }}
+        >
+          {REFRESH_INTERVALS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+      </div>
+      {/* Row count and last update info */}
+      <div
+        style={{
+          marginBottom: '16px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '24px',
+        }}
+      >
+        <span>
+          Row count: <strong>{filteredTools.length}</strong>
+        </span>
+        <span>
+          Last update:{' '}
+          <strong>{lastUpdate ? lastUpdate.toLocaleString() : 'Never'}</strong>
+        </span>
+      </div>
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
           <tr>
@@ -98,9 +187,25 @@ export const Tools: React.FC = () => {
                 textAlign: 'left',
                 padding: '8px',
                 border: '1px solid #ccc',
+                cursor: 'pointer',
+              }}
+              onClick={() => {
+                setSort((prev) =>
+                  prev.key === 'name'
+                    ? {
+                        key: 'name',
+                        direction: prev.direction === 'asc' ? 'desc' : 'asc',
+                      }
+                    : { key: 'name', direction: 'asc' }
+                );
               }}
             >
-              Name
+              Name{' '}
+              {sort.key === 'name'
+                ? sort.direction === 'asc'
+                  ? '▲'
+                  : '▼'
+                : ''}
             </th>
             <th
               style={{
@@ -108,9 +213,25 @@ export const Tools: React.FC = () => {
                 textAlign: 'left',
                 padding: '8px',
                 border: '1px solid #ccc',
+                cursor: 'pointer',
+              }}
+              onClick={() => {
+                setSort((prev) =>
+                  prev.key === 'description'
+                    ? {
+                        key: 'description',
+                        direction: prev.direction === 'asc' ? 'desc' : 'asc',
+                      }
+                    : { key: 'description', direction: 'asc' }
+                );
               }}
             >
-              Description
+              Description{' '}
+              {sort.key === 'description'
+                ? sort.direction === 'asc'
+                  ? '▲'
+                  : '▼'
+                : ''}
             </th>
             <th
               style={{
@@ -118,14 +239,30 @@ export const Tools: React.FC = () => {
                 textAlign: 'left',
                 padding: '8px',
                 border: '1px solid #ccc',
+                cursor: 'pointer',
+              }}
+              onClick={() => {
+                setSort((prev) =>
+                  prev.key === 'link'
+                    ? {
+                        key: 'link',
+                        direction: prev.direction === 'asc' ? 'desc' : 'asc',
+                      }
+                    : { key: 'link', direction: 'asc' }
+                );
               }}
             >
-              Link
+              Link{' '}
+              {sort.key === 'link'
+                ? sort.direction === 'asc'
+                  ? '▲'
+                  : '▼'
+                : ''}
             </th>
           </tr>
         </thead>
         <tbody>
-          {filteredTools
+          {sortedTools
             .slice(
               (page - 1) * pageSize,
               pageSize === filteredTools.length
