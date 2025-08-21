@@ -1,3 +1,4 @@
+import { apiGet } from '@osint-expert/data';
 import { useEffect, useState } from 'react';
 
 export interface Tool {
@@ -8,28 +9,22 @@ export interface Tool {
 }
 
 export const Tools: React.FC = () => {
-  const [tools, setTools] = useState<Tool[]>([
-    {
-      id: '1',
-      name: 'Tool 1',
-      description: 'Description for Tool 1',
-      link: 'https://example.com/tool1',
-    },
-    {
-      id: '2',
-      name: 'Tool 2',
-      description: 'Description for Tool 2',
-    },
-    {
-      id: '3',
-      name: 'Tool 3',
-      description: 'Description for Tool 3',
-      link: 'https://example.com/tool3',
-    },
-  ]);
+  const [tools, setTools] = useState<Tool[]>([]);
 
   useEffect(() => {
-    // This effect could be used to fetch tools from an API or perform other side effects
+    console.log('Tools component mounted, fetching tools...');
+    const getDefaultData = async () => {
+      console.log('Fetching tools from API...');
+      await apiGet<Tool[]>('/tools')
+        .then((data: Tool[]) => {
+          setTools(data);
+        })
+        .catch((error) => {
+          console.error('Error fetching tools:', error);
+        });
+    };
+
+    getDefaultData();
   }, []);
 
   return (
