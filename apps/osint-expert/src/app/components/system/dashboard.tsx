@@ -1,6 +1,7 @@
 import { Card, CardContent, Typography } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import React from 'react';
+import { Tools } from './tools';
 
 const Dashboard: React.FC = () => {
   return (
@@ -21,6 +22,8 @@ const Dashboard: React.FC = () => {
             </Grid>
           ))}
         </Grid>
+        <br />
+        <Tools />
       </div>
     </div>
   );
