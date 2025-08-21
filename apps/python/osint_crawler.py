@@ -155,7 +155,7 @@ def main():
     
     all_tools = []
     # Process up to 10 URLs
-    for url in urls[:10]:
+    for url in urls:
         logger.info(f"Crawling {url}")
         tools = extract_tools_from_page(url)
         all_tools.extend(tools)
