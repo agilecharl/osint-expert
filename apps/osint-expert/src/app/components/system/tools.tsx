@@ -1,4 +1,19 @@
+import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import MenuItem from '@mui/material/MenuItem';
+import Paper from '@mui/material/Paper';
+import Select from '@mui/material/Select';
+import Stack from '@mui/material/Stack';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
 import { apiGet } from '@osint-expert/data';
 import { useEffect, useRef, useState } from 'react';
 
@@ -82,291 +97,255 @@ export const Tools: React.FC = () => {
     return 0;
   });
 
+  const totalPages =
+    pageSize === filteredTools.length
+      ? 1
+      : Math.ceil(filteredTools.length / pageSize);
+
   return (
-    <>
-      <div
-        style={{
-          marginBottom: '16px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-        }}
-      >
-        <label htmlFor="searchInput">Search:</label>
-        <input
-          id="searchInput"
-          type="text"
-          placeholder="Search tools..."
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPage(1);
-          }}
-          style={{ padding: '4px 8px', flex: '1 1 auto' }}
-        />
-      </div>
-      <div
-        style={{
-          marginBottom: '16px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-        }}
-      >
-        <label htmlFor="pageSizeSelect">Rows per page:</label>
-        <select
-          id="pageSizeSelect"
-          value={pageSize === filteredTools.length ? 'all' : pageSize}
-          onChange={(e) => {
-            const value = e.target.value;
-            if (value === 'all') {
+    <Box sx={{ maxWidth: 1000, mx: 'auto', mt: 4 }}>
+      <Paper elevation={3} sx={{ p: 3 }}>
+        <Typography variant="h5" gutterBottom>
+          OSINT Tools
+        </Typography>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} mb={2}>
+          <TextField
+            label="Search"
+            variant="outlined"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
               setPage(1);
-              setPageSize(filteredTools.length);
-            } else {
-              setPage(1);
-              setPageSize(Number(value));
+            }}
+            fullWidth
+            size="small"
+          />
+          <FormControl size="small" sx={{ minWidth: 140 }}>
+            <InputLabel id="pageSizeSelectLabel">Rows per page</InputLabel>
+            <Select
+              labelId="pageSizeSelectLabel"
+              value={pageSize === filteredTools.length ? 'all' : pageSize}
+              label="Rows per page"
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === 'all') {
+                  setPage(1);
+                  setPageSize(filteredTools.length);
+                } else {
+                  setPage(1);
+                  setPageSize(Number(value));
+                }
+              }}
+            >
+              <MenuItem value={10}>10</MenuItem>
+              <MenuItem value={25}>25</MenuItem>
+              <MenuItem value={50}>50</MenuItem>
+              <MenuItem value={100}>100</MenuItem>
+              <MenuItem value="all">All</MenuItem>
+            </Select>
+          </FormControl>
+          <Button variant="contained" onClick={fetchTools}>
+            Refresh
+          </Button>
+          <FormControl size="small" sx={{ minWidth: 180 }}>
+            <InputLabel id="refreshIntervalSelectLabel">
+              Auto-refresh interval
+            </InputLabel>
+            <Select
+              labelId="refreshIntervalSelectLabel"
+              value={refreshInterval}
+              label="Auto-refresh interval"
+              onChange={(e) => setRefreshInterval(Number(e.target.value))}
+            >
+              {REFRESH_INTERVALS.map((opt) => (
+                <MenuItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Stack>
+        <Stack direction="row" spacing={4} mb={2}>
+          <Typography variant="body2">
+            Row count: <strong>{filteredTools.length}</strong>
+          </Typography>
+          <Typography variant="body2">
+            Last update:{' '}
+            <strong>
+              {lastUpdate ? lastUpdate.toLocaleString() : 'Never'}
+            </strong>
+          </Typography>
+        </Stack>
+        <TableContainer component={Paper} variant="outlined">
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell
+                  sx={{ cursor: 'pointer', fontWeight: 'bold' }}
+                  onClick={() => {
+                    setSort((prev) =>
+                      prev.key === 'name'
+                        ? {
+                            key: 'name',
+                            direction:
+                              prev.direction === 'asc' ? 'desc' : 'asc',
+                          }
+                        : { key: 'name', direction: 'asc' }
+                    );
+                  }}
+                >
+                  {(() => {
+                    let sortIcon = '';
+                    if (sort.key === 'name') {
+                      sortIcon = sort.direction === 'asc' ? '▲' : '▼';
+                    }
+                    return <>Name {sortIcon}</>;
+                  })()}
+                </TableCell>
+                <TableCell
+                  sx={{ cursor: 'pointer', fontWeight: 'bold' }}
+                  onClick={() => {
+                    setSort((prev) =>
+                      prev.key === 'description'
+                        ? {
+                            key: 'description',
+                            direction:
+                              prev.direction === 'asc' ? 'desc' : 'asc',
+                          }
+                        : { key: 'description', direction: 'asc' }
+                    );
+                  }}
+                >
+                  {(() => {
+                    let sortIcon = '';
+                    if (sort.key === 'description') {
+                      sortIcon = sort.direction === 'asc' ? '▲' : '▼';
+                    }
+                    return <>Description {sortIcon}</>;
+                  })()}
+                </TableCell>
+                <TableCell
+                  sx={{ cursor: 'pointer', fontWeight: 'bold' }}
+                  onClick={() => {
+                    setSort((prev) =>
+                      prev.key === 'link'
+                        ? {
+                            key: 'link',
+                            direction:
+                              prev.direction === 'asc' ? 'desc' : 'asc',
+                          }
+                        : { key: 'link', direction: 'asc' }
+                    );
+                  }}
+                >
+                  Link{' '}
+                  {sort.key === 'link'
+                    ? sort.direction === 'asc'
+                      ? '▲'
+                      : '▼'
+                    : ''}
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {sortedTools
+                .slice(
+                  (page - 1) * pageSize,
+                  pageSize === filteredTools.length
+                    ? filteredTools.length
+                    : page * pageSize
+                )
+                .map((tool) => (
+                  <TableRow key={tool.id}>
+                    <TableCell>
+                      <strong>{tool.name}</strong>
+                    </TableCell>
+                    <TableCell>{tool.description}</TableCell>
+                    <TableCell>
+                      {tool.link ? (
+                        <a
+                          href={tool.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            textDecoration: 'underline',
+                            color: '#1976d2',
+                          }}
+                        >
+                          {tool.link}
+                        </a>
+                      ) : (
+                        '-'
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+        <Stack
+          direction="row"
+          spacing={2}
+          justifyContent="center"
+          alignItems="center"
+          mt={2}
+        >
+          <Button
+            variant="contained"
+            onClick={() => setPage(1)}
+            disabled={page === 1 || pageSize === filteredTools.length}
+          >
+            First
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1 || pageSize === filteredTools.length}
+          >
+            Previous
+          </Button>
+          <Typography variant="body2">
+            Page {page} of {totalPages}
+          </Typography>
+          <Button
+            variant="contained"
+            onClick={() =>
+              setPage((p) =>
+                Math.min(
+                  pageSize === filteredTools.length
+                    ? 1
+                    : Math.ceil(filteredTools.length / pageSize),
+                  p + 1
+                )
+              )
             }
-          }}
-          style={{ padding: '4px 8px' }}
-        >
-          <option value={10}>10</option>
-          <option value={25}>25</option>
-          <option value={50}>50</option>
-          <option value={100}>100</option>
-          <option value="all">All</option>
-        </select>
-      </div>
-      <div
-        style={{
-          marginBottom: '16px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-        }}
-      >
-        <Button variant="contained" onClick={fetchTools}>
-          Refresh
-        </Button>
-        <label htmlFor="refreshIntervalSelect">Auto-refresh interval:</label>
-        <select
-          id="refreshIntervalSelect"
-          value={refreshInterval}
-          onChange={(e) => setRefreshInterval(Number(e.target.value))}
-          style={{ padding: '4px 8px' }}
-        >
-          {REFRESH_INTERVALS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-      </div>
-      {/* Row count and last update info */}
-      <div
-        style={{
-          marginBottom: '16px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '24px',
-        }}
-      >
-        <span>
-          Row count: <strong>{filteredTools.length}</strong>
-        </span>
-        <span>
-          Last update:{' '}
-          <strong>{lastUpdate ? lastUpdate.toLocaleString() : 'Never'}</strong>
-        </span>
-      </div>
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr>
-            <th
-              style={{
-                borderBottom: '1px solid #ccc',
-                textAlign: 'left',
-                padding: '8px',
-                border: '1px solid #ccc',
-                cursor: 'pointer',
-              }}
-              onClick={() => {
-                setSort((prev) =>
-                  prev.key === 'name'
-                    ? {
-                        key: 'name',
-                        direction: prev.direction === 'asc' ? 'desc' : 'asc',
-                      }
-                    : { key: 'name', direction: 'asc' }
-                );
-              }}
-            >
-              Name{' '}
-              {sort.key === 'name'
-                ? sort.direction === 'asc'
-                  ? '▲'
-                  : '▼'
-                : ''}
-            </th>
-            <th
-              style={{
-                borderBottom: '1px solid #ccc',
-                textAlign: 'left',
-                padding: '8px',
-                border: '1px solid #ccc',
-                cursor: 'pointer',
-              }}
-              onClick={() => {
-                setSort((prev) =>
-                  prev.key === 'description'
-                    ? {
-                        key: 'description',
-                        direction: prev.direction === 'asc' ? 'desc' : 'asc',
-                      }
-                    : { key: 'description', direction: 'asc' }
-                );
-              }}
-            >
-              Description{' '}
-              {sort.key === 'description'
-                ? sort.direction === 'asc'
-                  ? '▲'
-                  : '▼'
-                : ''}
-            </th>
-            <th
-              style={{
-                borderBottom: '1px solid #ccc',
-                textAlign: 'left',
-                padding: '8px',
-                border: '1px solid #ccc',
-                cursor: 'pointer',
-              }}
-              onClick={() => {
-                setSort((prev) =>
-                  prev.key === 'link'
-                    ? {
-                        key: 'link',
-                        direction: prev.direction === 'asc' ? 'desc' : 'asc',
-                      }
-                    : { key: 'link', direction: 'asc' }
-                );
-              }}
-            >
-              Link{' '}
-              {sort.key === 'link'
-                ? sort.direction === 'asc'
-                  ? '▲'
-                  : '▼'
-                : ''}
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {sortedTools
-            .slice(
-              (page - 1) * pageSize,
+            disabled={
+              page === totalPages ||
+              filteredTools.length === 0 ||
               pageSize === filteredTools.length
-                ? filteredTools.length
-                : page * pageSize
-            )
-            .map((tool) => (
-              <tr key={tool.id} style={{ border: '1px solid #ccc' }}>
-                <td style={{ border: '1px solid #ccc', padding: '8px' }}>
-                  <strong>{tool.name}</strong>
-                </td>
-                <td style={{ border: '1px solid #ccc', padding: '8px' }}>
-                  {tool.description}
-                </td>
-                <td style={{ border: '1px solid #ccc', padding: '8px' }}>
-                  {tool.link ? (
-                    <a
-                      href={tool.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ textDecoration: 'underline', color: '#0070f3' }}
-                    >
-                      {tool.link}
-                    </a>
-                  ) : (
-                    '-'
-                  )}
-                </td>
-              </tr>
-            ))}
-        </tbody>
-      </table>
-      <div
-        style={{
-          marginTop: '16px',
-          display: 'flex',
-          justifyContent: 'center',
-          gap: '8px',
-        }}
-      >
-        <Button
-          variant="contained"
-          onClick={() => setPage(1)}
-          disabled={page === 1 || pageSize === filteredTools.length}
-        >
-          First
-        </Button>
-        <Button
-          variant="contained"
-          onClick={() => setPage((p) => Math.max(1, p - 1))}
-          disabled={page === 1 || pageSize === filteredTools.length}
-        >
-          Previous
-        </Button>
-        <span style={{ alignSelf: 'center' }}>
-          Page {page} of{' '}
-          {pageSize === filteredTools.length
-            ? 1
-            : Math.ceil(filteredTools.length / pageSize)}
-        </span>
-        <Button
-          variant="contained"
-          onClick={() =>
-            setPage((p) =>
-              Math.min(
+            }
+          >
+            Next
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() =>
+              setPage(
                 pageSize === filteredTools.length
                   ? 1
-                  : Math.ceil(filteredTools.length / pageSize),
-                p + 1
+                  : Math.ceil(filteredTools.length / pageSize)
               )
-            )
-          }
-          disabled={
-            page ===
-              (pageSize === filteredTools.length
-                ? 1
-                : Math.ceil(filteredTools.length / pageSize)) ||
-            filteredTools.length === 0 ||
-            pageSize === filteredTools.length
-          }
-        >
-          Next
-        </Button>
-        <Button
-          variant="contained"
-          onClick={() =>
-            setPage(
+            }
+            disabled={
+              page === totalPages ||
+              filteredTools.length === 0 ||
               pageSize === filteredTools.length
-                ? 1
-                : Math.ceil(filteredTools.length / pageSize)
-            )
-          }
-          disabled={
-            page ===
-              (pageSize === filteredTools.length
-                ? 1
-                : Math.ceil(filteredTools.length / pageSize)) ||
-            filteredTools.length === 0 ||
-            pageSize === filteredTools.length
-          }
-        >
-          Last
-        </Button>
-      </div>
-    </>
+            }
+          >
+            Last
+          </Button>
+        </Stack>
+      </Paper>
+    </Box>
   );
 };
