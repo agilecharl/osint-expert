@@ -1,0 +1,10 @@
+{
+  "name": "@osint-expert/osint-expert-e2e",
+  "version": "0.0.1",
+  "private": true,
+  "nx": {
+    "implicitDependencies": [
+      "@osint-expert/osint-expert"
+    ]
+  }
+}
