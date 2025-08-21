@@ -7,7 +7,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: 'http://localhost:4200', // or use '*' for all origins (not recommended for production)
+    origin: 'http://localhost:4200',
     credentials: true,
   })
 );
@@ -16,7 +16,7 @@ app.use(express.json());
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL, // Set your DB connection string in env
+  connectionString: process.env.DATABASE_URL,
 });
 
 // Get all tools
