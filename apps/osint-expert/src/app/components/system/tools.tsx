@@ -30,8 +30,6 @@ export const Tools: React.FC = () => {
 
   return (
     <>
-      <h2>System Tools</h2>
-      <br />
       <div
         style={{
           marginBottom: '16px',
