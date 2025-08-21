@@ -11,8 +11,15 @@ export interface Tool {
 
 export const Tools: React.FC = () => {
   const [tools, setTools] = useState<Tool[]>([]);
+  const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+
+  const filteredTools = tools.filter(
+    (tool) =>
+      tool.name.toLowerCase().includes(search.toLowerCase()) ||
+      tool.description.toLowerCase().includes(search.toLowerCase())
+  );
 
   useEffect(() => {
     const getDefaultData = async () => {
@@ -38,15 +45,36 @@ export const Tools: React.FC = () => {
           gap: '8px',
         }}
       >
+        <label htmlFor="searchInput">Search:</label>
+        <input
+          id="searchInput"
+          type="text"
+          placeholder="Search tools..."
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
+          style={{ padding: '4px 8px', flex: '1 1 auto' }}
+        />
+      </div>
+      <div
+        style={{
+          marginBottom: '16px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+        }}
+      >
         <label htmlFor="pageSizeSelect">Rows per page:</label>
         <select
           id="pageSizeSelect"
-          value={pageSize === tools.length ? 'all' : pageSize}
+          value={pageSize === filteredTools.length ? 'all' : pageSize}
           onChange={(e) => {
             const value = e.target.value;
             if (value === 'all') {
               setPage(1);
-              setPageSize(tools.length);
+              setPageSize(filteredTools.length);
             } else {
               setPage(1);
               setPageSize(Number(value));
@@ -97,10 +125,12 @@ export const Tools: React.FC = () => {
           </tr>
         </thead>
         <tbody>
-          {tools
+          {filteredTools
             .slice(
               (page - 1) * pageSize,
-              pageSize === tools.length ? tools.length : page * pageSize
+              pageSize === filteredTools.length
+                ? filteredTools.length
+                : page * pageSize
             )
             .map((tool) => (
               <tr key={tool.id} style={{ border: '1px solid #ccc' }}>
@@ -139,40 +169,42 @@ export const Tools: React.FC = () => {
         <Button
           variant="contained"
           onClick={() => setPage(1)}
-          disabled={page === 1 || pageSize === tools.length}
+          disabled={page === 1 || pageSize === filteredTools.length}
         >
           First
         </Button>
         <Button
           variant="contained"
           onClick={() => setPage((p) => Math.max(1, p - 1))}
-          disabled={page === 1 || pageSize === tools.length}
+          disabled={page === 1 || pageSize === filteredTools.length}
         >
           Previous
         </Button>
         <span style={{ alignSelf: 'center' }}>
           Page {page} of{' '}
-          {pageSize === tools.length ? 1 : Math.ceil(tools.length / pageSize)}
+          {pageSize === filteredTools.length
+            ? 1
+            : Math.ceil(filteredTools.length / pageSize)}
         </span>
         <Button
           variant="contained"
           onClick={() =>
             setPage((p) =>
               Math.min(
-                pageSize === tools.length
+                pageSize === filteredTools.length
                   ? 1
-                  : Math.ceil(tools.length / pageSize),
+                  : Math.ceil(filteredTools.length / pageSize),
                 p + 1
               )
             )
           }
           disabled={
             page ===
-              (pageSize === tools.length
+              (pageSize === filteredTools.length
                 ? 1
-                : Math.ceil(tools.length / pageSize)) ||
-            tools.length === 0 ||
-            pageSize === tools.length
+                : Math.ceil(filteredTools.length / pageSize)) ||
+            filteredTools.length === 0 ||
+            pageSize === filteredTools.length
           }
         >
           Next
@@ -181,16 +213,18 @@ export const Tools: React.FC = () => {
           variant="contained"
           onClick={() =>
             setPage(
-              pageSize === tools.length ? 1 : Math.ceil(tools.length / pageSize)
+              pageSize === filteredTools.length
+                ? 1
+                : Math.ceil(filteredTools.length / pageSize)
             )
           }
           disabled={
             page ===
-              (pageSize === tools.length
+              (pageSize === filteredTools.length
                 ? 1
-                : Math.ceil(tools.length / pageSize)) ||
-            tools.length === 0 ||
-            pageSize === tools.length
+                : Math.ceil(filteredTools.length / pageSize)) ||
+            filteredTools.length === 0 ||
+            pageSize === filteredTools.length
           }
         >
           Last
