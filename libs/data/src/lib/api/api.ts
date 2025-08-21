@@ -9,7 +9,6 @@ export async function apiGet<T>(
   endpoint: string,
   config?: AxiosRequestConfig
 ): Promise<T> {
-  console.log(`API URL: ${apiBaseUrl}`);
   const response = await axios.get<T>(`${apiBaseUrl}${endpoint}`, config);
   return response.data;
 }

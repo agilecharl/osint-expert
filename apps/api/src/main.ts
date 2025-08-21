@@ -1,8 +1,17 @@
+import cors from 'cors';
 import express from 'express';
 import * as path from 'path';
 import { Pool } from 'pg';
 
 const app = express();
+
+app.use(
+  cors({
+    origin: 'http://localhost:4200', // or use '*' for all origins (not recommended for production)
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 

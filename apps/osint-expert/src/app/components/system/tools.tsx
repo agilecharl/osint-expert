@@ -12,9 +12,7 @@ export const Tools: React.FC = () => {
   const [tools, setTools] = useState<Tool[]>([]);
 
   useEffect(() => {
-    console.log('Tools component mounted, fetching tools...');
     const getDefaultData = async () => {
-      console.log('Fetching tools from API...');
       await apiGet<Tool[]>('/tools')
         .then((data: Tool[]) => {
           setTools(data);
