@@ -1,7 +1,15 @@
-import { Card, CardContent, Typography } from '@mui/material';
+import {
+  AppBar,
+  Button,
+  Card,
+  CardContent,
+  Toolbar,
+  Typography,
+} from '@mui/material';
 import Grid from '@mui/material/Grid';
 import { apiGet } from '@osint-expert/data';
 import React, { useEffect } from 'react';
+import TargetList from '../targets/targets-list';
 import { Tools } from './tools';
 
 const Dashboard: React.FC = () => {
@@ -9,11 +17,11 @@ const Dashboard: React.FC = () => {
   const [targetCount, setTargetCount] = React.useState(0);
   const [findingCount, setFindingCount] = React.useState(0);
   const [messageCount, setMessageCount] = React.useState(0);
+  const [showTargets, setShowTargets] = React.useState(false); // Add state
 
   const updateDashboard = async () => {
     await apiGet('/counters')
       .then((data) => {
-        // Type assertion for expected structure
         const toolsData = data as {
           alerts: any;
           targets: any;
@@ -36,7 +44,22 @@ const Dashboard: React.FC = () => {
 
   return (
     <div>
-      <h1>OSINT Expert Headquarters</h1>
+      <AppBar position="static">
+        <Toolbar>
+          <Typography variant="h6" sx={{ flexGrow: 1, marginLeft: 2 }}>
+            OSINT Expert
+          </Typography>
+          <Button color="inherit" onClick={() => setShowTargets(false)}>
+            Dashboard
+          </Button>
+          <Button
+            color="inherit"
+            onClick={() => setShowTargets(true)} // Change handler
+          >
+            Targets
+          </Button>
+        </Toolbar>
+      </AppBar>
       <div style={{ marginTop: 24 }}>
         <Grid container spacing={3}>
           {[
@@ -56,7 +79,7 @@ const Dashboard: React.FC = () => {
           ))}
         </Grid>
         <br />
-        <Tools />
+        {showTargets ? <TargetList /> : <Tools />} {/* Conditional rendering */}
       </div>
     </div>
   );
