@@ -1,6 +1,8 @@
+import RefreshIcon from '@mui/icons-material/Refresh';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import FormControl from '@mui/material/FormControl';
+import IconButton from '@mui/material/IconButton';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import Paper from '@mui/material/Paper';
@@ -144,9 +146,6 @@ export const Tools: React.FC = () => {
               <MenuItem value="all">All</MenuItem>
             </Select>
           </FormControl>
-          <Button variant="contained" onClick={fetchTools}>
-            Refresh
-          </Button>
           <FormControl size="small" sx={{ minWidth: 180 }}>
             <InputLabel id="refreshIntervalSelectLabel">
               Auto-refresh interval
@@ -164,6 +163,9 @@ export const Tools: React.FC = () => {
               ))}
             </Select>
           </FormControl>
+          <IconButton color="primary" onClick={fetchTools} aria-label="Refresh">
+            <RefreshIcon />
+          </IconButton>
         </Stack>
         <Stack direction="row" spacing={4} mb={2}>
           <Typography variant="body2">
@@ -238,12 +240,13 @@ export const Tools: React.FC = () => {
                     );
                   }}
                 >
-                  Link{' '}
-                  {sort.key === 'link'
-                    ? sort.direction === 'asc'
-                      ? '▲'
-                      : '▼'
-                    : ''}
+                  {(() => {
+                    let sortIcon = '';
+                    if (sort.key === 'link') {
+                      sortIcon = sort.direction === 'asc' ? '▲' : '▼';
+                    }
+                    return <>Link {sortIcon}</>;
+                  })()}
                 </TableCell>
               </TableRow>
             </TableHead>

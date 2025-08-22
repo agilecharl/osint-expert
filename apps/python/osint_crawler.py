@@ -77,7 +77,7 @@ def extract_tools_from_page(url):
         try:
             schema = {
                 "name": "OSINT Tool Extractor",
-                "description": "Extracts OSINT tools and their descriptions from a webpage.",
+                "description": "Extracts OSINT tools and their descriptions from an entire website.",
                 "parameters": {
                     "tools": [
                         {
@@ -88,10 +88,15 @@ def extract_tools_from_page(url):
                     ]
                 }
             }
-            
+
             strategy = LLMExtractionStrategy(
                 schema=schema,
-                instruction="Extract all OSINT tools mentioned on the page, including their names, descriptions, and URLs."
+                instruction=(
+                    "Extract all OSINT tools mentioned across the entire website, "
+                    "including their names, descriptions, and URLs. "
+                    "Follow internal links to find all relevant tools listed on any page of the site."
+                ),
+                crawl_entire_site=True  # Assuming the strategy supports this argument
             )
             
             result = await crawler.arun(
