@@ -102,6 +102,21 @@ app.get('/api/targets', async (req, res) => {
   }
 });
 
+// Create a new target
+app.post('/api/targets', async (req, res) => {
+  const { target, description } = req.body;
+  try {
+    const result = await pool.query(
+      'INSERT INTO osint.targets (target, description) VALUES ($1, $2) RETURNING *',
+      [target, description]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error('Error creating target:', err);
+    res.status(500).json({ error: 'Failed to create target' });
+  }
+});
+
 const port = process.env.PORT || 3333;
 const server = app.listen(port, () => {
   console.log(`Listening at http://localhost:${port}/api`);

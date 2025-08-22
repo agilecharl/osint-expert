@@ -7,7 +7,7 @@ import { EditTarget } from './edit-target';
 // Define the Target type if not imported from elsewhere
 type Target = {
   id: string | number;
-  name: string;
+  target: string;
   description?: string;
 };
 
@@ -92,14 +92,18 @@ const TargetsList: React.FC = () => {
       </Spin>
       {showEdit && (
         <EditTarget
-          target={
+          inputTarget={
             editTarget
               ? {
                   id: String(editTarget.id),
-                  name: editTarget.name,
+                  target: editTarget.target,
                   description: editTarget.description,
                 }
-              : { id: '', name: '', description: '' }
+              : {
+                  id: '',
+                  target: '',
+                  description: '',
+                }
           }
           onSave={() => handleEditClose(true)}
           onCancel={() => handleEditClose(false)}
