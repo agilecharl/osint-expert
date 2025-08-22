@@ -91,6 +91,17 @@ app.get('/api/counters', async (req, res) => {
   }
 });
 
+// Get all targets
+app.get('/api/targets', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM osint.targets');
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching targets:', err);
+    res.status(500).json({ error: 'Failed to fetch targets' });
+  }
+});
+
 const port = process.env.PORT || 3333;
 const server = app.listen(port, () => {
   console.log(`Listening at http://localhost:${port}/api`);
