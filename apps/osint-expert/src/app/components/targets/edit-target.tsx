@@ -1,3 +1,5 @@
+import Button from '@mui/material/Button'; // <-- And this
+import TextField from '@mui/material/TextField'; // <-- Add this
 import React, { useState } from 'react';
 
 interface EditTargetProps {
@@ -29,29 +31,59 @@ export const EditTarget: React.FC<EditTargetProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className="edit-target-form">
-      <div>
-        <label htmlFor="target-name">Name</label>
-        <input
-          id="target-name"
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-        />
-      </div>
-      <div>
-        <label htmlFor="target-description">Description</label>
-        <textarea
-          id="target-description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-      </div>
-      <div>
-        <button type="submit">Save</button>
-        <button type="button" onClick={onCancel}>
-          Cancel
-        </button>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 24,
+          maxWidth: 400,
+        }}
+      >
+        <div>
+          <label htmlFor="target-name" style={{ display: 'none' }}>
+            Name
+          </label>
+          <TextField
+            id="target-name"
+            label="Name"
+            variant="outlined"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            fullWidth
+            autoFocus
+            margin="normal"
+          />
+        </div>
+        <div>
+          <label htmlFor="target-description" style={{ display: 'none' }}>
+            Description
+          </label>
+          <TextField
+            id="target-description"
+            label="Description"
+            variant="outlined"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            multiline
+            rows={4}
+            fullWidth
+            margin="normal"
+          />
+        </div>
+        <div style={{ display: 'flex', gap: 16, justifyContent: 'flex-end' }}>
+          <Button type="submit" variant="contained" color="primary">
+            Save
+          </Button>
+          <Button
+            type="button"
+            variant="outlined"
+            color="secondary"
+            onClick={onCancel}
+          >
+            Cancel
+          </Button>
+        </div>
       </div>
     </form>
   );
