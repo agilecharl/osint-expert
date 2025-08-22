@@ -65,8 +65,30 @@ app.put('/api/tools/:id', async (req, res) => {
   }
 });
 
-app.get('/api', (req, res) => {
-  res.send({ message: 'Welcome to api!' });
+// Get counters
+app.get('/api/counters', async (req, res) => {
+  try {
+    const alertsResult = await pool.query('SELECT COUNT(*) FROM osint.alerts');
+    const targetsResult = await pool.query(
+      'SELECT COUNT(*) FROM osint.targets'
+    );
+    const findingsResult = await pool.query(
+      'SELECT COUNT(*) FROM osint.findings'
+    );
+    const messagesResult = await pool.query(
+      'SELECT COUNT(*) FROM osint.messages'
+    );
+
+    res.json({
+      alerts: parseInt(alertsResult.rows[0].count, 10),
+      targets: parseInt(targetsResult.rows[0].count, 10),
+      findings: parseInt(findingsResult.rows[0].count, 10),
+      messages: parseInt(messagesResult.rows[0].count, 10),
+    });
+  } catch (err) {
+    console.error('Error fetching tool counters:', err);
+    res.status(500).json({ error: 'Failed to fetch tool counters' });
+  }
 });
 
 const port = process.env.PORT || 3333;
