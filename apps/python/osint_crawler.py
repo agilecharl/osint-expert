@@ -1,181 +1,312 @@
-import psycopg2
-import logging
-import json
 import asyncio
-
+import re
+import logging
+from typing import List, Dict, Set
+from urllib.parse import urljoin, urlparse
+import psycopg2
+from psycopg2.extras import RealDictCursor
 from crawl4ai import AsyncWebCrawler
 from crawl4ai.extraction_strategy import LLMExtractionStrategy
-#from serpapi import GoogleSearch
-from urllib.parse import urljoin
-import re
+import json
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# Database configuration
-DB_CONFIG = {
-    'dbname': 'osint',
-    'user': 'osint',  # Replace with your PostgreSQL username
-    'password': 'osint',  # Replace with your PostgreSQL password
-    'host': 'localhost',
-    'port': '5432'
-}
-
-# SerpAPI configuration
-SERPAPI_KEY = 'your_serpapi_key'  # Replace with your SerpAPI key
-
-# Initialize Crawl4AI crawler
-crawler = AsyncWebCrawler()
-
-def connect_db():
-    """Connect to the PostgreSQL database."""
-    try:
-        conn = psycopg2.connect(**DB_CONFIG)
-        logger.info("Connected to PostgreSQL database")
-        return conn
-    except Exception as e:
-        logger.error(f"Database connection error: {e}")
-        raise
-
-def fetch_urls_from_db(conn):
-    """Fetch URLs from the osint.tools table."""
-    try:
-        with conn.cursor() as cur:
-            cur.execute("SELECT link FROM osint.tools WHERE link IS NOT NULL")
-            urls = [row[0] for row in cur.fetchall()]
-        logger.info(f"Fetched {len(urls)} URLs from database")
-        return urls
-    except Exception as e:
-        logger.error(f"Error fetching URLs from database: {e}")
-        return []
-
-'''
-def search_osint_tools():
-    """Search for OSINT tools using SerpAPI."""
-    try:
-
-        params = {
-            'q': 'OSINT tools site:*.org | site:*.edu | site:*.gov -inurl:(signup | login)',
-            'api_key': SERPAPI_KEY,
-            'num': 10
-        }
-
-        #search = GoogleSearch(params)
-        #results = search.get_dict().get('organic_results', [])
-        #urls = [result['link'] for result in results]
-        #logger.info(f"Found {len(urls)} URLs from search engine")
-        #return urls
-    except Exception as e:
-        logger.error(f"Search engine error: {e}")
-        return []
-'''
-
-def extract_tools_from_page(url):
-    """Extract OSINT tool information from crawled content."""
-    async def run_extraction():
+class OSINTToolsCrawler:
+    def __init__(self, db_config: Dict[str, str]):
+        self.db_config = db_config
+        self.visited_urls: Set[str] = set()
+        self.crawled_domains: Set[str] = set()
+        self.max_depth = 3
+        self.max_pages_per_domain = 10
+        
+        # OSINT-related keywords for filtering relevant pages
+        self.osint_keywords = [
+            'osint', 'intelligence', 'investigation', 'reconnaissance', 
+            'cyber', 'security', 'forensics', 'analysis', 'surveillance',
+            'social media', 'geolocation', 'metadata', 'dark web',
+            'threat intelligence', 'investigation tools', 'security tools'
+        ]
+        
+    def get_db_connection(self):
+        """Create database connection"""
+        return psycopg2.connect(**self.db_config)
+    
+    def is_osint_relevant(self, text: str, url: str) -> bool:
+        """Check if content is OSINT-related"""
+        text_lower = text.lower()
+        url_lower = url.lower()
+        
+        # Check URL for OSINT indicators
+        url_indicators = any(keyword in url_lower for keyword in self.osint_keywords)
+        
+        # Check content for OSINT keywords (more flexible matching)
+        content_score = sum(text_lower.count(keyword) for keyword in self.osint_keywords)
+        
+        return url_indicators or content_score >= 3
+    
+    def extract_links(self, html_content: str, base_url: str) -> List[str]:
+        """Extract all links from HTML content"""
+        # Simple regex to find href attributes
+        link_pattern = r'href=["\']([^"\']+)["\']'
+        links = re.findall(link_pattern, html_content, re.IGNORECASE)
+        
+        absolute_links = []
+        for link in links:
+            absolute_url = urljoin(base_url, link)
+            if self.is_valid_url(absolute_url):
+                absolute_links.append(absolute_url)
+        
+        return list(set(absolute_links))  # Remove duplicates
+    
+    def is_valid_url(self, url: str) -> bool:
+        """Check if URL is valid and crawlable"""
         try:
-            schema = {
-                "name": "OSINT Tool Extractor",
-                "description": "Extracts OSINT tools and their descriptions from an entire website.",
-                "parameters": {
-                    "tools": [
-                        {
-                            "name": {"type": "string", "description": "Name of the OSINT tool"},
-                            "description": {"type": "string", "description": "Description of the tool"},
-                            "url": {"type": "string", "description": "URL of the tool"}
+            parsed = urlparse(url)
+            if not parsed.scheme or not parsed.netloc:
+                return False
+            
+            # Skip certain file types
+            skip_extensions = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', 
+                             '.zip', '.rar', '.tar', '.gz', '.jpg', '.jpeg', '.png', '.gif']
+            
+            if any(url.lower().endswith(ext) for ext in skip_extensions):
+                return False
+                
+            return True
+        except:
+            return False
+    
+    async def extract_osint_tools(self, content: str, url: str) -> List[Dict[str, str]]:
+        """Extract OSINT tools from webpage content using LLM"""
+        
+        extraction_strategy = LLMExtractionStrategy(
+            provider="openai",  # You can change this to your preferred provider
+            api_token="your-api-key-here",  # Replace with your API key
+            schema={
+                "type": "object",
+                "properties": {
+                    "tools": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "tool": {"type": "string"},
+                                "description": {"type": "string"},
+                                "link": {"type": "string"}
+                            },
+                            "required": ["tool", "description", "link"]
                         }
-                    ]
-                }
-            }
-
-            strategy = LLMExtractionStrategy(
-                schema=schema,
-                instruction=(
-                    "Extract all OSINT tools mentioned across the entire website, "
-                    "including their names, descriptions, and URLs. "
-                    "Follow internal links to find all relevant tools listed on any page of the site."
-                ),
-                crawl_entire_site=True  # Assuming the strategy supports this argument
-            )
+                    }
+                },
+                "required": ["tools"]
+            },
+            extraction_prompt="""
+            Extract OSINT (Open Source Intelligence) tools from this webpage content.
+            Look for:
+            - Tool names (software, websites, services)
+            - Brief descriptions of what each tool does
+            - Links to the tools (if available, otherwise use the current page URL)
             
-            result = await crawler.arun(
-                url=url,
-                extraction_strategy=strategy,
-                bypass_cache=True
-            )
+            Focus on tools used for:
+            - Social media investigation
+            - Website/domain analysis  
+            - IP/network reconnaissance
+            - Email investigation
+            - Image/metadata analysis
+            - Dark web monitoring
+            - Threat intelligence
+            - Digital forensics
+            - Geolocation
+            - People search
             
-            if result.success:
-                tools = result.extracted_content.get('tools', []) if result.extracted_content else []
-                for tool in tools:
-                    tool['source_url'] = url
-                return tools
-            else:
-                logger.warning(f"Failed to crawl {url}")
-                return []
+            Return only legitimate OSINT tools, not general software.
+            """
+        )
+        
+        try:
+            # This is a simplified extraction - you might want to use a more sophisticated approach
+            tools = []
+            
+            # Basic pattern matching for common tool formats
+            patterns = [
+                r'(?:Tool|Software|Website|Service):\s*([^-\n]+)\s*[-–]\s*([^\n]+)',
+                r'(?:\*\*|##)\s*([^*#\n]+)(?:\*\*|##)?\s*[-–]?\s*([^\n]+)',
+                r'(?:\d+\.)\s*([^-\n]+)\s*[-–]\s*([^\n]+)'
+            ]
+            
+            for pattern in patterns:
+                matches = re.findall(pattern, content, re.MULTILINE | re.IGNORECASE)
+                for match in matches:
+                    if len(match) >= 2:
+                        tool_name = match[0].strip()
+                        description = match[1].strip()
+                        
+                        # Basic validation
+                        if (len(tool_name) > 2 and len(description) > 10 and 
+                            any(keyword in (tool_name + description).lower() 
+                                for keyword in self.osint_keywords)):
+                            
+                            tools.append({
+                                'tool': tool_name,
+                                'description': description,
+                                'link': url
+                            })
+            
+            return tools
+            
         except Exception as e:
-            logger.error(f"Error extracting tools from {url}: {e}")
+            logger.error(f"Error extracting tools from {url}: {str(e)}")
             return []
-    # Fix for Windows event loop issue
-    try:
-        loop = asyncio.get_event_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-    return loop.run_until_complete(run_extraction())
-
-def save_tools_to_db(conn, tools):
-    """Save extracted tools to the database."""
-    try:
-        with conn.cursor() as cur:
+    
+    async def save_tools_to_db(self, tools: List[Dict[str, str]]):
+        """Save extracted tools to database"""
+        if not tools:
+            return
+            
+        try:
+            conn = self.get_db_connection()
+            cursor = conn.cursor()
+            
             for tool in tools:
-                cur.execute(
-                    """
-                    INSERT INTO osint.tools (name, description, link, source_url)
-                    VALUES (%s, %s, %s, %s)
-                    ON CONFLICT (link) DO NOTHING
-                    """,
-                    (tool.get('name'), tool.get('description'), tool.get('url'), tool.get('source_url'))
+                # Check if tool already exists
+                cursor.execute(
+                    "SELECT COUNT(*) FROM osint.tools WHERE tool = %s AND link = %s",
+                    (tool['tool'], tool['link'])
                 )
-        conn.commit()
-        logger.info(f"Saved {len(tools)} tools to database")
-    except Exception as e:
-        logger.error(f"Error saving tools to database: {e}")
-        conn.rollback()
+                
+                if cursor.fetchone()[0] == 0:
+                    cursor.execute(
+                        "INSERT INTO osint.tools (tool, description, link) VALUES (%s, %s, %s)",
+                        (tool['tool'], tool['description'], tool['link'])
+                    )
+                    logger.info(f"Added tool: {tool['tool']}")
+            
+            conn.commit()
+            cursor.close()
+            conn.close()
+            
+        except Exception as e:
+            logger.error(f"Error saving tools to database: {str(e)}")
+    
+    async def crawl_page(self, url: str, depth: int = 0) -> List[str]:
+        """Crawl a single page and extract tools and links"""
+        if url in self.visited_urls or depth > self.max_depth:
+            return []
+        
+        self.visited_urls.add(url)
+        domain = urlparse(url).netloc
+        
+        # Limit pages per domain
+        domain_count = sum(1 for visited_url in self.visited_urls 
+                          if urlparse(visited_url).netloc == domain)
+        if domain_count > self.max_pages_per_domain:
+            return []
+        
+        logger.info(f"Crawling: {url} (depth: {depth})")
+        
+        try:
+            async with AsyncWebCrawler(verbose=True) as crawler:
+                result = await crawler.arun(url=url)
+                
+                if not result.success:
+                    logger.warning(f"Failed to crawl {url}: {result.error_message}")
+                    return []
+                
+                content = result.markdown or result.html
+                
+                # Check if content is OSINT-relevant
+                if not self.is_osint_relevant(content, url):
+                    logger.info(f"Skipping non-OSINT page: {url}")
+                    return []
+                
+                # Extract OSINT tools
+                tools = await self.extract_osint_tools(content, url)
+                if tools:
+                    await self.save_tools_to_db(tools)
+                    logger.info(f"Found {len(tools)} tools on {url}")
+                
+                # Extract links for further crawling
+                links = self.extract_links(result.html, url)
+                
+                # Filter links to focus on potentially relevant pages
+                relevant_links = [link for link in links 
+                                if any(keyword in link.lower() for keyword in self.osint_keywords)]
+                
+                return relevant_links[:20]  # Limit links per page
+                
+        except Exception as e:
+            logger.error(f"Error crawling {url}: {str(e)}")
+            return []
+    
+    async def get_seed_urls(self) -> List[str]:
+        """Get seed URLs from database"""
+        try:
+            conn = self.get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("SELECT DISTINCT link FROM osint.tools WHERE link IS NOT NULL")
+            urls = [row[0] for row in cursor.fetchall()]
+            cursor.close()
+            conn.close()
+            return urls
+        except Exception as e:
+            logger.error(f"Error getting seed URLs: {str(e)}")
+            return []
+    
+    async def run_crawler(self):
+        """Main crawling function"""
+        logger.info("Starting OSINT tools crawler...")
+        
+        # Get seed URLs from database
+        seed_urls = await self.get_seed_urls()
+        
+        if not seed_urls:
+            logger.warning("No seed URLs found in database. Please add some initial URLs.")
+            return
+        
+        # Queue for URLs to crawl
+        crawl_queue = list(seed_urls)
+        depth = 0
+        
+        while crawl_queue and depth <= self.max_depth:
+            current_batch = crawl_queue[:50]  # Process in batches
+            crawl_queue = crawl_queue[50:]
+            
+            logger.info(f"Processing batch of {len(current_batch)} URLs at depth {depth}")
+            
+            # Crawl pages concurrently
+            tasks = [self.crawl_page(url, depth) for url in current_batch]
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            
+            # Collect new links
+            for result in results:
+                if isinstance(result, list):
+                    crawl_queue.extend(result)
+            
+            depth += 1
+            
+            # Remove duplicates and already visited URLs
+            crawl_queue = list(set(crawl_queue) - self.visited_urls)
+        
+        logger.info(f"Crawling completed. Visited {len(self.visited_urls)} pages.")
 
-def main():
-    """Main function to run the OSINT tools crawler."""
-    # Connect to database
-    conn = connect_db()
+# Example usage
+async def main():
+    # Database configuration
+    db_config = {
+        'host': 'localhost',
+        'database': 'osint',
+        'user': 'osint',
+        'password': 'osint',
+        'port': 5432
+    }
     
-    # Fetch initial URLs from database
-    urls = fetch_urls_from_db(conn)
+    # Initialize crawler
+    crawler = OSINTToolsCrawler(db_config)
     
-    # Add URLs from search engine
-    #urls.extend(search_osint_tools())
-    
-    # Deduplicate URLs
-    urls = list(set(urls))
-    logger.info(f"Total unique URLs to crawl: {len(urls)}")
-    
-    all_tools = []
-    # Process up to 10 URLs
-    for url in urls:
-        logger.info(f"Crawling {url}")
-        tools = extract_tools_from_page(url)
-        all_tools.extend(tools)
-    
-    # Save results to database
-    if all_tools:
-        save_tools_to_db(conn, all_tools)
-    
-    # Save results to a JSON file for backup
-    with open('osint_tools.json', 'w') as f:
-        json.dump(all_tools, f, indent=2)
-    logger.info(f"Saved {len(all_tools)} tools to osint_tools.json")
-    
-    conn.close()
-    logger.info("Database connection closed")
+    # Run the crawler
+    await crawler.run_crawler()
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

@@ -21,7 +21,7 @@ import { useEffect, useRef, useState } from 'react';
 
 export interface Tool {
   id: string;
-  name: string;
+  tool: string;
   description: string;
   link?: string;
 }
@@ -42,7 +42,7 @@ export const Tools: React.FC = () => {
     key: keyof Tool;
     direction: 'asc' | 'desc';
   }>({
-    key: 'name',
+    key: 'tool',
     direction: 'asc',
   });
 
@@ -81,7 +81,7 @@ export const Tools: React.FC = () => {
 
   const filteredTools = tools.filter(
     (tool) =>
-      tool.name.toLowerCase().includes(search.toLowerCase()) ||
+      tool.tool.toLowerCase().includes(search.toLowerCase()) ||
       tool.description.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -186,19 +186,19 @@ export const Tools: React.FC = () => {
                   sx={{ cursor: 'pointer', fontWeight: 'bold' }}
                   onClick={() => {
                     setSort((prev) =>
-                      prev.key === 'name'
+                      prev.key === 'tool'
                         ? {
-                            key: 'name',
+                            key: 'tool',
                             direction:
                               prev.direction === 'asc' ? 'desc' : 'asc',
                           }
-                        : { key: 'name', direction: 'asc' }
+                        : { key: 'tool', direction: 'asc' }
                     );
                   }}
                 >
                   {(() => {
                     let sortIcon = '';
-                    if (sort.key === 'name') {
+                    if (sort.key === 'tool') {
                       sortIcon = sort.direction === 'asc' ? '▲' : '▼';
                     }
                     return <>Name {sortIcon}</>;
@@ -261,7 +261,7 @@ export const Tools: React.FC = () => {
                 .map((tool) => (
                   <TableRow key={tool.id}>
                     <TableCell>
-                      <strong>{tool.name}</strong>
+                      <strong>{tool.tool}</strong>
                     </TableCell>
                     <TableCell>{tool.description}</TableCell>
                     <TableCell>
