@@ -128,6 +128,43 @@ app.get('/api/weblinks', async (req, res) => {
   }
 });
 
+app.get('/api/stage-weblinks/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query(
+      'SELECT * FROM osint.stage_weblinks WHERE id = $1',
+      [id]
+    );
+    if (result.rows.length === 0) {
+      res.status(404).json({ error: 'Stage weblink not found' });
+    } else {
+      res.json(result.rows);
+    }
+  } catch (err) {
+    console.error('Error fetching stage weblink:', err);
+    res.status(500).json({ error: 'Failed to fetch stage weblink' });
+  }
+});
+
+app.put('/api/stage-weblinks/:id', async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+  try {
+    const result = await pool.query(
+      'UPDATE osint.stage_weblinks SET status = $1 WHERE id = $2 RETURNING *',
+      [status, id]
+    );
+    if (result.rows.length === 0) {
+      res.status(404).json({ error: 'Stage weblink not found' });
+    } else {
+      res.json(result.rows[0]);
+    }
+  } catch (err) {
+    console.error('Error updating stage weblink:', err);
+    res.status(500).json({ error: 'Failed to update stage weblink' });
+  }
+});
+
 // Get all stage-weblinks
 app.get('/api/stage-weblinks', async (req, res) => {
   try {
