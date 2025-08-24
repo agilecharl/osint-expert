@@ -7,13 +7,13 @@ interface StageWeblinkParams {
 
 const StageWeblinks: React.FC<StageWeblinkParams> = ({ onClose }) => {
   const [weblinks, setWeblinks] = useState<
-    Array<{ id: number; url: string; description?: string }>
+    Array<{ id: number; url: string; title: string; description?: string }>
   >([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   async function fetchStageWeblinks(): Promise<
-    Array<{ id: number; url: string; description?: string }>
+    Array<{ id: number; url: string; title: string; description?: string }>
   > {
     try {
       const data = await apiGet('/stage-weblinks');
@@ -22,6 +22,7 @@ const StageWeblinks: React.FC<StageWeblinkParams> = ({ onClose }) => {
         return data.map((item: any) => ({
           id: item.id,
           url: item.url,
+          title: item.title || item.url,
           description: item.description,
         }));
       } else {
@@ -47,16 +48,28 @@ const StageWeblinks: React.FC<StageWeblinkParams> = ({ onClose }) => {
     <div>
       <h2>Stage Weblinks</h2>
       <button onClick={onClose}>Close</button>
-      <ul>
-        {weblinks.map((link) => (
-          <li key={link.id}>
-            <a href={link.url} target="_blank" rel="noopener noreferrer">
-              {link.url}
-            </a>
-            {link.description && <span> - {link.description}</span>}
-          </li>
-        ))}
-      </ul>
+      <table>
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Description</th>
+            <th>URL</th>
+          </tr>
+        </thead>
+        <tbody>
+          {weblinks.map((link) => (
+            <tr key={link.id}>
+              <td>{link.title}</td>
+              <td>{link.description || ''}</td>
+              <td>
+                <a href={link.url} target="_blank" rel="noopener noreferrer">
+                  {link.url}
+                </a>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };
