@@ -7,7 +7,6 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from crawl4ai import AsyncWebCrawler
 from crawl4ai.extraction_strategy import LLMExtractionStrategy
-from crawl4ai.llm_config import LLMConfig  # Add this import
 import json
 
 # Configure logging
@@ -129,8 +128,8 @@ class OSINTToolsCrawler:
             for tool in tools:
                 # Check if tool already exists
                 cursor.execute(
-                    "SELECT COUNT(*) FROM osint.tools WHERE tool = %s AND link = %s",
-                    (tool['tool'], tool['link'])
+                    "SELECT COUNT(*) FROM osint.tools WHERE link = %s",
+                    ( tool['link'],)
                 )
                 
                 if cursor.fetchone()[0] == 0:
@@ -164,9 +163,7 @@ class OSINTToolsCrawler:
         logger.info(f"Crawling: {url} (depth: {depth})")
         
         try:
-            # Specify your provider, e.g., "openai" or another supported provider
-            llm_config = LLMConfig(provider="openai")  # Change provider as needed
-            async with AsyncWebCrawler(verbose=True, llm_config=llm_config) as crawler:
+            async with AsyncWebCrawler(verbose=True) as crawler:
                 result = await crawler.arun(url=url)
                 
                 if not result.success:
