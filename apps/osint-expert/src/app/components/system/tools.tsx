@@ -23,7 +23,7 @@ export interface Tool {
   id: string;
   tool: string;
   description: string;
-  link?: string;
+  url?: string;
 }
 
 const REFRESH_INTERVALS = [
@@ -230,19 +230,19 @@ export const Tools: React.FC = () => {
                   sx={{ cursor: 'pointer', fontWeight: 'bold' }}
                   onClick={() => {
                     setSort((prev) =>
-                      prev.key === 'link'
+                      prev.key === 'url'
                         ? {
-                            key: 'link',
+                            key: 'url',
                             direction:
                               prev.direction === 'asc' ? 'desc' : 'asc',
                           }
-                        : { key: 'link', direction: 'asc' }
+                        : { key: 'url', direction: 'asc' }
                     );
                   }}
                 >
                   {(() => {
                     let sortIcon = '';
-                    if (sort.key === 'link') {
+                    if (sort.key === 'url') {
                       sortIcon = sort.direction === 'asc' ? '▲' : '▼';
                     }
                     return <>Link {sortIcon}</>;
@@ -261,13 +261,13 @@ export const Tools: React.FC = () => {
                 .map((tool) => (
                   <TableRow key={tool.id}>
                     <TableCell>
-                      <strong>{tool.tool.substring(1, 30)}</strong>
+                      <strong>{tool.tool.substring(0, 30)}</strong>
                     </TableCell>
-                    <TableCell>{tool.description.substring(1, 30)}</TableCell>
+                    <TableCell>{tool.description.substring(0, 30)}</TableCell>
                     <TableCell>
-                      {tool.link ? (
+                      {tool.url ? (
                         <a
-                          href={tool.link}
+                          href={tool.url}
                           target="_blank"
                           rel="noopener noreferrer"
                           style={{
@@ -275,7 +275,7 @@ export const Tools: React.FC = () => {
                             color: '#1976d2',
                           }}
                         >
-                          {tool.link}
+                          {tool.url}
                         </a>
                       ) : (
                         '-'
