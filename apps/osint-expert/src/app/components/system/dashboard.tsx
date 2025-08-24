@@ -10,6 +10,7 @@ import Grid from '@mui/material/Grid';
 import { apiGet } from '@osint-expert/data';
 import React, { useEffect } from 'react';
 import TargetList from '../targets/targets-list';
+import Weblinks from '../weblinks/weblinks';
 import { Tools } from './tools';
 
 const Dashboard: React.FC = () => {
@@ -17,7 +18,15 @@ const Dashboard: React.FC = () => {
   const [targetCount, setTargetCount] = React.useState(0);
   const [findingCount, setFindingCount] = React.useState(0);
   const [messageCount, setMessageCount] = React.useState(0);
-  const [showTargets, setShowTargets] = React.useState(false); // Add state
+  const [showTools, setShowTools] = React.useState(false);
+  const [showTargets, setShowTargets] = React.useState(false);
+  const [showWeblinks, setShowWeblinks] = React.useState(false);
+
+  const resetDashboard = () => {
+    setShowTools(false);
+    setShowTargets(false);
+    setShowWeblinks(false);
+  };
 
   const updateDashboard = async () => {
     await apiGet('/counters')
@@ -49,14 +58,32 @@ const Dashboard: React.FC = () => {
           <Typography variant="h6" sx={{ flexGrow: 1, marginLeft: 2 }}>
             OSINT Expert
           </Typography>
-          <Button color="inherit" onClick={() => setShowTargets(false)}>
+          <Button
+            color="inherit"
+            onClick={() => {
+              resetDashboard();
+              setShowTools(true);
+            }}
+          >
             Dashboard
           </Button>
           <Button
             color="inherit"
-            onClick={() => setShowTargets(true)} // Change handler
+            onClick={() => {
+              resetDashboard();
+              setShowTargets(true);
+            }}
           >
             Targets
+          </Button>
+          <Button
+            color="inherit"
+            onClick={() => {
+              resetDashboard();
+              setShowWeblinks((prev) => !prev);
+            }}
+          >
+            Weblinks
           </Button>
         </Toolbar>
       </AppBar>
@@ -79,7 +106,9 @@ const Dashboard: React.FC = () => {
           ))}
         </Grid>
         <br />
-        {showTargets ? <TargetList /> : <Tools />} {/* Conditional rendering */}
+        {showTools && <Tools />}
+        {showTargets && <TargetList />}
+        {showWeblinks && <Weblinks />}
       </div>
     </div>
   );
