@@ -48,6 +48,8 @@ const Dashboard: React.FC = () => {
   };
 
   useEffect(() => {
+    resetDashboard();
+    setShowTools(true);
     updateDashboard();
   }, []);
 

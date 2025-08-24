@@ -117,6 +117,28 @@ app.post('/api/targets', async (req, res) => {
   }
 });
 
+// Get all weblinks
+app.get('/api/weblinks', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM osint.weblinks');
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching weblinks:', err);
+    res.status(500).json({ error: 'Failed to fetch weblinks' });
+  }
+});
+
+// Get all stage-weblinks
+app.get('/api/stage-weblinks', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM osint.stage_weblinks');
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching stage-weblinks:', err);
+    res.status(500).json({ error: 'Failed to fetch stage-weblinks' });
+  }
+});
+
 const port = process.env.PORT || 3333;
 const server = app.listen(port, () => {
   console.log(`Listening at http://localhost:${port}/api`);
