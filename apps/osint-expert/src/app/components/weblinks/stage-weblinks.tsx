@@ -56,6 +56,7 @@ const StageWeblinks: React.FC<StageWeblinkParams> = ({ onClose }) => {
           <table>
             <thead>
               <tr>
+                <th>ID</th>
                 <th>Title</th>
                 <th>Description</th>
                 <th>URL</th>
@@ -64,6 +65,7 @@ const StageWeblinks: React.FC<StageWeblinkParams> = ({ onClose }) => {
             <tbody>
               {weblinks.map((link) => (
                 <tr key={link.id}>
+                  <td>{link.id}</td>
                   <td>
                     <button
                       style={{

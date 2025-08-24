@@ -16,6 +16,8 @@ export const EditStageWeblink: React.FC<EditStageWeblinksProps> = ({
   id,
   onClose,
 }) => {
+  const [weblinkTitle, setWeblinkTitle] = useState<string>('');
+  const [weblinkDescription, setWeblinkDescription] = useState<string>('');
   const [weblinkUrl, setWeblinkUrl] = useState<string>('');
   const [weblinkType, setWeblinkType] = useState<string>('');
 
@@ -36,6 +38,12 @@ export const EditStageWeblink: React.FC<EditStageWeblinksProps> = ({
     console.log('Fetching weblink with ID:', id);
     await apiGet<StageWeblink[]>('/stage-weblinks/' + id)
       .then((data: StageWeblink[]) => {
+        setWeblinkTitle(
+          data.find((weblink) => Number(weblink.id) === id)?.title || ''
+        );
+        setWeblinkDescription(
+          data.find((weblink) => Number(weblink.id) === id)?.description || ''
+        );
         setWeblinkUrl(
           data.find((weblink) => Number(weblink.id) === id)?.url || ''
         );
@@ -64,7 +72,41 @@ export const EditStageWeblink: React.FC<EditStageWeblinksProps> = ({
       }}
     >
       <h2 style={{ marginBottom: 16 }}>Edit Stage Weblink</h2>
+      <p>{id}</p>
       <div style={{ marginBottom: 16 }}>
+        <label htmlFor="weblink-title-input">Title</label>
+        <input
+          id="weblink-title-input"
+          type="text"
+          value={weblinkTitle}
+          onChange={(e) => setWeblinkTitle(e.target.value)}
+          placeholder="Enter Title"
+          style={{
+            width: '100%',
+            padding: '8px 12px',
+            borderRadius: 4,
+            border: '1px solid #ccc',
+            fontSize: 16,
+          }}
+        />
+        <br />
+        <label htmlFor="weblink-description-input">Description</label>
+        <textarea
+          id="weblink-description-input"
+          value={weblinkDescription}
+          onChange={(e) => setWeblinkDescription(e.target.value)}
+          placeholder="Enter Description"
+          style={{
+            width: '100%',
+            padding: '8px 12px',
+            borderRadius: 4,
+            border: '1px solid #ccc',
+            fontSize: 16,
+            marginTop: 8,
+            minHeight: 60,
+            resize: 'vertical',
+          }}
+        />
         <label
           htmlFor="weblink-url-input"
           style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}
