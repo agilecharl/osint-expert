@@ -7,6 +7,7 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from crawl4ai import AsyncWebCrawler
 from crawl4ai.extraction_strategy import LLMExtractionStrategy
+from crawl4ai.llm_config import LLMConfig  # Add this import
 import json
 
 # Configure logging
@@ -78,52 +79,8 @@ class OSINTToolsCrawler:
         except:
             return False
     
-    async def extract_osint_tools(self, content: str, url: str) -> List[Dict[str, str]]:
+    def extract_osint_tools(self, content: str, url: str) -> List[Dict[str, str]]:
         """Extract OSINT tools from webpage content using LLM"""
-        
-        extraction_strategy = LLMExtractionStrategy(
-            provider="openai",  # You can change this to your preferred provider
-            api_token="your-api-key-here",  # Replace with your API key
-            schema={
-                "type": "object",
-                "properties": {
-                    "tools": {
-                        "type": "array",
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "tool": {"type": "string"},
-                                "description": {"type": "string"},
-                                "link": {"type": "string"}
-                            },
-                            "required": ["tool", "description", "link"]
-                        }
-                    }
-                },
-                "required": ["tools"]
-            },
-            extraction_prompt="""
-            Extract OSINT (Open Source Intelligence) tools from this webpage content.
-            Look for:
-            - Tool names (software, websites, services)
-            - Brief descriptions of what each tool does
-            - Links to the tools (if available, otherwise use the current page URL)
-            
-            Focus on tools used for:
-            - Social media investigation
-            - Website/domain analysis  
-            - IP/network reconnaissance
-            - Email investigation
-            - Image/metadata analysis
-            - Dark web monitoring
-            - Threat intelligence
-            - Digital forensics
-            - Geolocation
-            - People search
-            
-            Return only legitimate OSINT tools, not general software.
-            """
-        )
         
         try:
             # This is a simplified extraction - you might want to use a more sophisticated approach
@@ -160,7 +117,7 @@ class OSINTToolsCrawler:
             logger.error(f"Error extracting tools from {url}: {str(e)}")
             return []
     
-    async def save_tools_to_db(self, tools: List[Dict[str, str]]):
+    def save_tools_to_db(self, tools: List[Dict[str, str]]):
         """Save extracted tools to database"""
         if not tools:
             return
@@ -207,7 +164,9 @@ class OSINTToolsCrawler:
         logger.info(f"Crawling: {url} (depth: {depth})")
         
         try:
-            async with AsyncWebCrawler(verbose=True) as crawler:
+            # Specify your provider, e.g., "openai" or another supported provider
+            llm_config = LLMConfig(provider="openai")  # Change provider as needed
+            async with AsyncWebCrawler(verbose=True, llm_config=llm_config) as crawler:
                 result = await crawler.arun(url=url)
                 
                 if not result.success:
@@ -222,9 +181,9 @@ class OSINTToolsCrawler:
                     return []
                 
                 # Extract OSINT tools
-                tools = await self.extract_osint_tools(content, url)
+                tools = self.extract_osint_tools(content, url)
                 if tools:
-                    await self.save_tools_to_db(tools)
+                    self.save_tools_to_db(tools)
                     logger.info(f"Found {len(tools)} tools on {url}")
                 
                 # Extract links for further crawling
@@ -240,7 +199,7 @@ class OSINTToolsCrawler:
             logger.error(f"Error crawling {url}: {str(e)}")
             return []
     
-    async def get_seed_urls(self) -> List[str]:
+    def get_seed_urls(self) -> List[str]:
         """Get seed URLs from database"""
         try:
             conn = self.get_db_connection()
@@ -259,7 +218,7 @@ class OSINTToolsCrawler:
         logger.info("Starting OSINT tools crawler...")
         
         # Get seed URLs from database
-        seed_urls = await self.get_seed_urls()
+        seed_urls = self.get_seed_urls()
         
         if not seed_urls:
             logger.warning("No seed URLs found in database. Please add some initial URLs.")
