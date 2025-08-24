@@ -261,9 +261,9 @@ export const Tools: React.FC = () => {
                 .map((tool) => (
                   <TableRow key={tool.id}>
                     <TableCell>
-                      <strong>{tool.tool}</strong>
+                      <strong>{tool.tool.substring(1, 30)}</strong>
                     </TableCell>
-                    <TableCell>{tool.description}</TableCell>
+                    <TableCell>{tool.description.substring(1, 30)}</TableCell>
                     <TableCell>
                       {tool.link ? (
                         <a
