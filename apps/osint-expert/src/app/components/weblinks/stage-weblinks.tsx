@@ -14,11 +14,13 @@ const StageWeblinks: React.FC<StageWeblinkParams> = ({ onClose }) => {
   const [error, setError] = useState<string | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedWeblink, setSelectedWeblink] = useState(0);
+  const [refreshFlag, setRefreshFlag] = useState(true);
 
   async function fetchStageWeblinks(): Promise<
     Array<{ id: number; url: string; title: string; description?: string }>
   > {
     try {
+      setRefreshFlag(false);
       const data = await apiGet('/stage-weblinks');
       if (Array.isArray(data)) {
         // Map data to weblink format if necessary
@@ -42,7 +44,7 @@ const StageWeblinks: React.FC<StageWeblinkParams> = ({ onClose }) => {
       .then(setWeblinks)
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
-  }, []);
+  }, [refreshFlag]);
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
@@ -120,7 +122,10 @@ const StageWeblinks: React.FC<StageWeblinkParams> = ({ onClose }) => {
       {showEditModal && (
         <EditStageWeblink
           id={selectedWeblink}
-          onClose={() => setShowEditModal(false)}
+          onClose={() => {
+            setShowEditModal(false);
+            setRefreshFlag(true);
+          }}
         />
       )}
     </div>

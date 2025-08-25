@@ -148,11 +148,11 @@ app.get('/api/stage-weblinks/:id', async (req, res) => {
 
 app.put('/api/stage-weblinks/:id', async (req, res) => {
   const { id } = req.params;
-  const { status } = req.body;
+  const { title, description, url, weblink_type } = req.body;
   try {
     const result = await pool.query(
-      'UPDATE osint.stage_weblinks SET status = $1 WHERE id = $2 RETURNING *',
-      [status, id]
+      'UPDATE osint.stage_weblinks SET title = $1, description = $2, url = $3, weblink_type = $4 WHERE id = $5 RETURNING *',
+      [title, description, url, weblink_type, id]
     );
     if (result.rows.length === 0) {
       res.status(404).json({ error: 'Stage weblink not found' });

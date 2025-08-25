@@ -3,8 +3,10 @@ import React, { useEffect, useState } from 'react';
 
 type StageWeblink = {
   id: string;
-  url: string;
+  title: string;
   description: string;
+  url: string;
+  weblink_type: string;
 };
 
 type EditStageWeblinksProps = {
@@ -19,12 +21,14 @@ export const EditStageWeblink: React.FC<EditStageWeblinksProps> = ({
   const [weblinkTitle, setWeblinkTitle] = useState<string>('');
   const [weblinkDescription, setWeblinkDescription] = useState<string>('');
   const [weblinkUrl, setWeblinkUrl] = useState<string>('');
-  const [weblinkType, setWeblinkType] = useState<string>('');
+  const [weblinkType, setWeblinkType] = useState(0);
 
   const handleSave = () => {
     apiPut('/stage-weblinks/' + id, {
+      title: weblinkTitle,
+      description: weblinkDescription,
       url: weblinkUrl,
-      description: weblinkType,
+      weblink_type: weblinkType,
     })
       .then(() => {
         onClose();
@@ -48,7 +52,9 @@ export const EditStageWeblink: React.FC<EditStageWeblinksProps> = ({
           data.find((weblink) => Number(weblink.id) === id)?.url || ''
         );
         setWeblinkType(
-          data.find((weblink) => Number(weblink.id) === id)?.description || ''
+          Number(
+            data.find((weblink) => Number(weblink.id) === id)?.weblink_type
+          ) || 0
         );
       })
       .catch((error) => {
@@ -139,7 +145,7 @@ export const EditStageWeblink: React.FC<EditStageWeblinksProps> = ({
           id="weblink-type-input"
           type="text"
           value={weblinkType}
-          onChange={(e) => setWeblinkType(e.target.value)}
+          onChange={(e) => setWeblinkType(Number(e.target.value))}
           placeholder="Enter Weblink Type"
           style={{
             width: '100%',
