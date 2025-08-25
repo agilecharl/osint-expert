@@ -200,6 +200,30 @@ app.post('/api/categories', async (req, res) => {
   }
 });
 
+app.get('/api/codes', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM osint.codes');
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching codes:', err);
+    res.status(500).json({ error: 'Failed to fetch codes' });
+  }
+});
+
+app.post('/api/codes', async (req, res) => {
+  const { category, code } = req.body;
+  try {
+    const result = await pool.query(
+      'INSERT INTO osint.codes (category, code) VALUES ($1, $2) RETURNING *',
+      [category, code]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error('Error creating code:', err);
+    res.status(500).json({ error: 'Failed to create code' });
+  }
+});
+
 const port = process.env.PORT || 3333;
 const server = app.listen(port, () => {
   console.log(`Listening at http://localhost:${port}/api`);

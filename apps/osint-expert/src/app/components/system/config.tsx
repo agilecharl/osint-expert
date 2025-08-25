@@ -9,24 +9,20 @@ type ConfigArea = {
 
 const configAreas: ConfigArea[] = [
   {
-    key: 'general',
-    name: 'General',
-    description: 'Basic application settings.',
+    key: 'categories',
+    name: 'Categories',
   },
   {
     key: 'notifications',
     name: 'Notifications',
-    description: 'Manage notification preferences.',
   },
   {
     key: 'security',
     name: 'Security',
-    description: 'Security and privacy options.',
   },
   {
     key: 'integrations',
     name: 'Integrations',
-    description: 'Third-party service connections.',
   },
 ];
 
@@ -49,17 +45,17 @@ const Config: React.FC = () => {
       {showMenu && (
         <div>
           <h2>Configuration Areas</h2>
+          <br />
           <ul>
             {configAreas.map((area) => (
               <li key={area.key}>
                 <button
                   onClick={() => {
                     resetConfigs();
-                    if (area.key === 'general') setShowCategories(true);
+                    if (area.key === 'categories') setShowCategories(true);
                   }}
                 >
                   <strong>{area.name}</strong>
-                  {area.description && <p>{area.description}</p>}
                 </button>
               </li>
             ))}

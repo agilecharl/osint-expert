@@ -10,13 +10,12 @@ type Code = {
   id: string;
   category?: string;
   code: string;
-  value: string;
 };
 
 export default function Categories() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [newCategoryName, setNewCategoryName] = useState('');
-  const [newCodeValue, setNewCodeValue] = useState('');
+  const [newCode, setNewCode] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
     null
   );
@@ -60,9 +59,20 @@ export default function Categories() {
     if (selectedCategoryId === id) setSelectedCategoryId(null);
   };
 
+  const saveCode = async (code: Code) => {
+    await apiPost('/codes', code);
+
+    await getCategories();
+  };
+
   // Add a code to selected category
   const handleAddCode = () => {
-    if (selectedCategoryId && newCodeValue.trim()) {
+    if (selectedCategoryId && newCode.trim()) {
+      saveCode({
+        id: '',
+        category: selectedCategoryId,
+        code: newCode.trim(),
+      });
       setCategories(
         categories.map((cat) =>
           cat.id === selectedCategoryId
@@ -71,19 +81,15 @@ export default function Categories() {
                 codes: [
                   {
                     id: Date.now().toString(),
-                    categoryId: cat.id,
-                    code: newCodeValue
-                      .trim()
-                      .toLowerCase()
-                      .replace(/\s+/g, '_'),
-                    value: newCodeValue.trim(),
+                    category: cat.id,
+                    code: newCode.trim(),
                   },
                 ],
               }
             : cat
         )
       );
-      setNewCodeValue('');
+      setNewCode('');
     }
   };
 
@@ -142,10 +148,10 @@ export default function Categories() {
             >
               Remove
             </button>
-            {/*  <ul>
-              {cat.codes.map((code) => (
+            <ul>
+              {(cat as any).codes?.map((code: Code) => (
                 <li key={code.id}>
-                  {code.value}
+                  {code.code}
                   <button
                     style={{ marginLeft: 8 }}
                     onClick={() => handleRemoveCode(cat.id, code.id)}
@@ -154,19 +160,18 @@ export default function Categories() {
                   </button>
                 </li>
               ))}
+              {selectedCategoryId === cat.id && (
+                <li>
+                  <input
+                    type="text"
+                    placeholder="New code"
+                    value={newCode}
+                    onChange={(e) => setNewCode(e.target.value)}
+                  />
+                  <button onClick={handleAddCode}>Add Code</button>
+                </li>
+              )}
             </ul>
-            */}
-            {selectedCategoryId === cat.id && (
-              <div>
-                <input
-                  type="text"
-                  placeholder="New code"
-                  value={newCodeValue}
-                  onChange={(e) => setNewCodeValue(e.target.value)}
-                />
-                <button onClick={handleAddCode}>Add Code</button>
-              </div>
-            )}
           </li>
         ))}
       </ul>
