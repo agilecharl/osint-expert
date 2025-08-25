@@ -1,43 +1,54 @@
-import { useState } from 'react';
-
-type Code = {
-  id: string;
-  value: string;
-};
+import { apiGet, apiPost } from '@osint-expert/data';
+import { useEffect, useState } from 'react';
 
 type Category = {
   id: string;
-  name: string;
-  codes: Code[];
+  category: string;
 };
 
-const initialCategories: Category[] = [
-  // Example initial data
-  {
-    id: '1',
-    name: 'Social Media',
-    codes: [
-      { id: 'a', value: 'FB' },
-      { id: 'b', value: 'TW' },
-    ],
-  },
-  { id: '2', name: 'Search Engines', codes: [{ id: 'c', value: 'GOOG' }] },
-];
+type Code = {
+  id: string;
+  category?: string;
+  code: string;
+  value: string;
+};
 
 export default function Categories() {
-  const [categories, setCategories] = useState<Category[]>(initialCategories);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCodeValue, setNewCodeValue] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
     null
   );
 
+  const getCategories = async () => {
+    await apiGet<Category[]>('/categories')
+      .then((data: Category[]) => {
+        const safeData = data.map((cat) => ({
+          ...cat,
+          codes: [] as Code[],
+        }));
+        setCategories(safeData);
+      })
+      .catch((error) => {
+        console.error('Error fetching tools:', error);
+      });
+  };
+
+  const saveCategory = async (category: Category) => {
+    // Implement save logic here, e.g., POST or PUT to your API
+    await apiPost('/categories', category);
+    // After saving, refresh the categories list
+    await getCategories();
+  };
+
   // Add a new category
   const handleAddCategory = () => {
     if (newCategoryName.trim()) {
+      saveCategory({ id: '', category: newCategoryName.trim() });
       setCategories([
         ...categories,
-        { id: Date.now().toString(), name: newCategoryName.trim(), codes: [] },
+        { id: Date.now().toString(), category: newCategoryName.trim() },
       ]);
       setNewCategoryName('');
     }
@@ -58,8 +69,15 @@ export default function Categories() {
             ? {
                 ...cat,
                 codes: [
-                  ...cat.codes,
-                  { id: Date.now().toString(), value: newCodeValue.trim() },
+                  {
+                    id: Date.now().toString(),
+                    categoryId: cat.id,
+                    code: newCodeValue
+                      .trim()
+                      .toLowerCase()
+                      .replace(/\s+/g, '_'),
+                    value: newCodeValue.trim(),
+                  },
                 ],
               }
             : cat
@@ -71,14 +89,21 @@ export default function Categories() {
 
   // Remove a code from category
   const handleRemoveCode = (catId: string, codeId: string) => {
-    setCategories(
+    /*    setCategories(
       categories.map((cat) =>
         cat.id === catId
-          ? { ...cat, codes: cat.codes.filter((code) => code.id !== codeId) }
+          ? {
+              ...cat,
+              codes: cat.codes.filter((code) => code.id !== codeId),
+            }
           : cat
       )
-    );
+    );*/
   };
+
+  useEffect(() => {
+    getCategories();
+  }, []);
 
   return (
     <div>
@@ -109,7 +134,7 @@ export default function Categories() {
               onClick={() => setSelectedCategoryId(cat.id)}
               aria-pressed={selectedCategoryId === cat.id}
             >
-              {cat.name}
+              {cat.category}
             </button>
             <button
               style={{ marginLeft: 8 }}
@@ -117,7 +142,7 @@ export default function Categories() {
             >
               Remove
             </button>
-            <ul>
+            {/*  <ul>
               {cat.codes.map((code) => (
                 <li key={code.id}>
                   {code.value}
@@ -130,6 +155,7 @@ export default function Categories() {
                 </li>
               ))}
             </ul>
+            */}
             {selectedCategoryId === cat.id && (
               <div>
                 <input

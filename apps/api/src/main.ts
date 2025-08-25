@@ -176,6 +176,30 @@ app.get('/api/stage-weblinks', async (req, res) => {
   }
 });
 
+app.get('/api/categories', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM osint.categories');
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching categories:', err);
+    res.status(500).json({ error: 'Failed to fetch categories' });
+  }
+});
+
+app.post('/api/categories', async (req, res) => {
+  const { category } = req.body;
+  try {
+    const result = await pool.query(
+      'INSERT INTO osint.categories (category) VALUES ($1) RETURNING *',
+      [category]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error('Error creating category:', err);
+    res.status(500).json({ error: 'Failed to create category' });
+  }
+});
+
 const port = process.env.PORT || 3333;
 const server = app.listen(port, () => {
   console.log(`Listening at http://localhost:${port}/api`);
