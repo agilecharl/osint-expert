@@ -11,6 +11,7 @@ import { apiGet } from '@osint-expert/data';
 import React, { useEffect } from 'react';
 import TargetList from '../targets/targets-list';
 import Weblinks from '../weblinks/weblinks';
+import Config from './config';
 import { Tools } from './tools';
 
 const Dashboard: React.FC = () => {
@@ -21,11 +22,13 @@ const Dashboard: React.FC = () => {
   const [showTools, setShowTools] = React.useState(false);
   const [showTargets, setShowTargets] = React.useState(false);
   const [showWeblinks, setShowWeblinks] = React.useState(false);
+  const [showConfig, setShowConfig] = React.useState(false);
 
   const resetDashboard = () => {
     setShowTools(false);
     setShowTargets(false);
     setShowWeblinks(false);
+    setShowConfig(false);
   };
 
   const updateDashboard = async () => {
@@ -87,6 +90,15 @@ const Dashboard: React.FC = () => {
           >
             Weblinks
           </Button>
+          <Button
+            color="inherit"
+            onClick={() => {
+              resetDashboard();
+              setShowConfig(true);
+            }}
+          >
+            Config
+          </Button>
         </Toolbar>
       </AppBar>
       <div style={{ marginTop: 24 }}>
@@ -111,6 +123,7 @@ const Dashboard: React.FC = () => {
         {showTools && <Tools />}
         {showTargets && <TargetList />}
         {showWeblinks && <Weblinks />}
+        {showConfig && <Config />}
       </div>
     </div>
   );
