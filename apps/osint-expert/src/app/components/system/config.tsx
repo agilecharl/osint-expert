@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import Categories from './categories';
 
 type ConfigArea = {
   key: string;
@@ -30,21 +31,42 @@ const configAreas: ConfigArea[] = [
 ];
 
 const Config: React.FC = () => {
+  const [showMenu, setShowMenu] = React.useState(true);
+  const [showCategories, setShowCategories] = React.useState(false);
+
+  const resetConfigs = () => {
+    setShowCategories(false);
+    setShowMenu(false);
+  };
+
+  useEffect(() => {
+    resetConfigs();
+    setShowMenu(true);
+  }, []);
+
   return (
     <div>
-      <h2>Configuration Areas</h2>
-      <ul>
-        {configAreas.map((area) => (
-          <li key={area.key}>
-            <strong>{area.name}</strong>
-            {area.description && (
-              <div style={{ fontSize: '0.9em', color: '#666' }}>
-                {area.description}
-              </div>
-            )}
-          </li>
-        ))}
-      </ul>
+      {showMenu && (
+        <div>
+          <h2>Configuration Areas</h2>
+          <ul>
+            {configAreas.map((area) => (
+              <li key={area.key}>
+                <button
+                  onClick={() => {
+                    resetConfigs();
+                    if (area.key === 'general') setShowCategories(true);
+                  }}
+                >
+                  <strong>{area.name}</strong>
+                  {area.description && <p>{area.description}</p>}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {showCategories && <Categories />}
     </div>
   );
 };
