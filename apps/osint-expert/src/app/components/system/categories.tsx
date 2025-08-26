@@ -25,7 +25,6 @@ export default function Categories() {
       const categoriesData = await apiGet<Category[]>('/categories');
       const categoriesWithCodes = await Promise.all(
         categoriesData.map(async (cat) => {
-          console.log('Fetching codes for category:', cat.id);
           const codes = await apiGet<Code[]>(`/categories/${cat.id}/codes`);
           return {
             ...cat,
