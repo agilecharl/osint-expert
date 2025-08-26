@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 category = 'osint'
-category_id = 0
+category_id = None
 
 class OSINTToolsCrawler:
     def __init__(self, db_config: Dict[str, str]):
