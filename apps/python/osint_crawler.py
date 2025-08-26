@@ -13,6 +13,9 @@ import json
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+category = 'osint'
+category_id = 0
+
 class OSINTToolsCrawler:
     def __init__(self, db_config: Dict[str, str]):
         self.db_config = db_config
@@ -75,7 +78,7 @@ class OSINTToolsCrawler:
                 return False
                 
             return True
-        except:
+        except Exception:
             return False
     
     def extract_osint_tools(self, content: str, url: str) -> List[Dict[str, str]]:
@@ -107,7 +110,7 @@ class OSINTToolsCrawler:
                             tools.append({
                                 'tool': tool_name,
                                 'description': description,
-                                'link': url
+                                'url': url
                             })
             
             return tools
@@ -120,29 +123,38 @@ class OSINTToolsCrawler:
         """Save extracted tools to database"""
         if not tools:
             return
-            
+
         try:
             conn = self.get_db_connection()
-            cursor = conn.cursor()
-            
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
+            cursor.execute("SELECT id FROM osint.categories WHERE category = %s", ('Weblink Types',))
+            category_row = cursor.fetchone()
+            category_id = category_row['id'] if category_row else None
+
+            code_id = None
+            if category_id:
+                cursor.execute("SELECT id FROM osint.codes WHERE category = %s AND code = %s", (category_id, 'OSINT Tool'))
+                code_row = cursor.fetchone()
+                code_id = code_row['id'] if code_row else None
+
             for tool in tools:
                 # Check if tool already exists
                 cursor.execute(
-                    "SELECT COUNT(*) FROM osint.tools WHERE link = %s",
-                    ( tool['link'],)
+                    "SELECT COUNT(*) FROM osint.tools WHERE url = %s",
+                    (tool['url'],)
                 )
-                
+
                 if cursor.fetchone()[0] == 0:
                     cursor.execute(
-                        "INSERT INTO osint.tools (tool, description, link) VALUES (%s, %s, %s)",
-                        (tool['tool'], tool['description'], tool['link'])
+                        "INSERT INTO osint.stage_weblinks (url, weblink_type, title, description) VALUES (%s, %s, %s, %s)",
+                        (tool['url'], code_id, tool['tool'], tool['description'])
                     )
                     logger.info(f"Added tool: {tool['tool']}")
-            
+
             conn.commit()
             cursor.close()
             conn.close()
-            
+
         except Exception as e:
             logger.error(f"Error saving tools to database: {str(e)}")
     
@@ -201,7 +213,7 @@ class OSINTToolsCrawler:
         try:
             conn = self.get_db_connection()
             cursor = conn.cursor()
-            cursor.execute("SELECT DISTINCT link FROM osint.tools WHERE link IS NOT NULL")
+            cursor.execute("SELECT DISTINCT url FROM osint.tools WHERE url IS NOT NULL LIMIT 1")
             urls = [row[0] for row in cursor.fetchall()]
             cursor.close()
             conn.close()

@@ -177,6 +177,8 @@ app.get('/api/stage-weblinks', async (req, res) => {
 });
 
 app.get('/api/categories', async (req, res) => {
+  const category = req.body.category;
+
   try {
     const result = await pool.query('SELECT * FROM osint.categories');
     res.json(result.rows);
