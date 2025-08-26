@@ -12,18 +12,6 @@ const configAreas: ConfigArea[] = [
     key: 'categories',
     name: 'Categories',
   },
-  {
-    key: 'notifications',
-    name: 'Notifications',
-  },
-  {
-    key: 'security',
-    name: 'Security',
-  },
-  {
-    key: 'integrations',
-    name: 'Integrations',
-  },
 ];
 
 const Config: React.FC = () => {

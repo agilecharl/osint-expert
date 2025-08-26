@@ -21,17 +21,22 @@ export default function Categories() {
   );
 
   const getCategories = async () => {
-    await apiGet<Category[]>('/categories')
-      .then((data: Category[]) => {
-        const safeData = data.map((cat) => ({
-          ...cat,
-          codes: [] as Code[],
-        }));
-        setCategories(safeData);
-      })
-      .catch((error) => {
-        console.error('Error fetching tools:', error);
-      });
+    try {
+      const categoriesData = await apiGet<Category[]>('/categories');
+      const categoriesWithCodes = await Promise.all(
+        categoriesData.map(async (cat) => {
+          console.log('Fetching codes for category:', cat.id);
+          const codes = await apiGet<Code[]>(`/categories/${cat.id}/codes`);
+          return {
+            ...cat,
+            codes: codes || [],
+          };
+        })
+      );
+      setCategories(categoriesWithCodes);
+    } catch (error) {
+      console.error('Error fetching categories or codes:', error);
+    }
   };
 
   const saveCategory = async (category: Category) => {
@@ -65,7 +70,6 @@ export default function Categories() {
     await getCategories();
   };
 
-  // Add a code to selected category
   const handleAddCode = () => {
     if (selectedCategoryId && newCode.trim()) {
       saveCode({

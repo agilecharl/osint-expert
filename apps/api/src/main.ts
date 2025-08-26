@@ -200,6 +200,20 @@ app.post('/api/categories', async (req, res) => {
   }
 });
 
+app.get('/api/categories/:id/codes', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query(
+      'SELECT * FROM osint.codes WHERE category = $1',
+      [id]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching codes for category:', err);
+    res.status(500).json({ error: 'Failed to fetch codes for category' });
+  }
+});
+
 app.get('/api/codes', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM osint.codes');
