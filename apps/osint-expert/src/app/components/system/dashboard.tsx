@@ -10,9 +10,9 @@ import Grid from '@mui/material/Grid';
 import { apiGet } from '@osint-expert/data';
 import React, { useEffect } from 'react';
 import TargetList from '../targets/targets-list';
+import { Tools } from '../tools/tools';
 import Weblinks from '../weblinks/weblinks';
 import Config from './config';
-import { Tools } from './tools';
 
 const Dashboard: React.FC = () => {
   const [alertCount, setAlertCount] = React.useState(0);
