@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 type Tool = {
   id: number;
@@ -8,23 +8,31 @@ type Tool = {
 };
 
 type EditToolsProps = {
-  initialTool?: Tool; // Used in useState initialization
-  onClose?: (tools: Tool[]) => void;
+  id?: number;
+  onClose?: (updatedTools: Tool[]) => void;
 };
 
-export const EditTools: React.FC<EditToolsProps> = ({
-  initialTool,
-  onClose,
-}) => {
-  const [tool, setTool] = React.useState<Tool>(
-    initialTool || { id: Date.now(), tool: '', description: '', url: '' }
-  );
+export const EditTools: React.FC<EditToolsProps> = ({ id, onClose }) => {
+  const [tool, setTool] = React.useState<Tool>();
+  const currentTool = id || 0;
 
   const handleSave = () => {
     if (onClose) {
       onClose([tool]);
     }
   };
+
+  useEffect(() => {
+    if (currentTool) {
+      // Fetch the tool details based on the id
+      fetch(`/api/tools/${currentTool}`)
+        .then((res) => res.json())
+        .then((data) => setTool(data))
+        .catch((err) => console.error('Error fetching tool:', err));
+    } else {
+      setTool({ id: 0, tool: '', description: '', url: '' });
+    }
+  }, [currentTool]);
 
   return (
     <div
@@ -102,9 +110,7 @@ export const EditTools: React.FC<EditToolsProps> = ({
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
         <button
           onClick={() => {
-            if (typeof onClose === 'function') {
-              onClose([tool]);
-            }
+            onClose && onClose([]);
           }}
           style={{
             padding: '0.5rem 1.2rem',

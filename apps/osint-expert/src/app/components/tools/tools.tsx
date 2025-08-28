@@ -35,6 +35,7 @@ const REFRESH_INTERVALS = [
 
 export const Tools: React.FC = () => {
   const [tools, setTools] = useState<Tool[]>([]);
+  const [currentTool, setCurrentTool] = useState<number | undefined>(undefined);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -289,6 +290,7 @@ export const Tools: React.FC = () => {
                         <TableCell
                           sx={{ cursor: 'pointer' }}
                           onClick={() => {
+                            setCurrentTool(Number(tool.id));
                             setShowToolForm(true);
                           }}
                         >
@@ -381,7 +383,15 @@ export const Tools: React.FC = () => {
           </Paper>
         </Box>
       )}
-      {showToolForm && <EditTools onClose />}
+      {showToolForm && (
+        <EditTools
+          id={currentTool}
+          onClose={() => {
+            setShowToolForm(false);
+            fetchTools();
+          }}
+        />
+      )}
     </div>
   );
 };
