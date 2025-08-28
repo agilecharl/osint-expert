@@ -19,6 +19,18 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
+app.get('/api/tools/:id', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM osint.tools WHERE id = $1', [
+      req.params.id,
+    ]);
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Error fetching tool:', err);
+    res.status(500).json({ error: 'Failed to fetch tool' });
+  }
+});
+
 // Get all tools
 app.get('/api/tools', async (req, res) => {
   try {
@@ -180,7 +192,10 @@ app.get('/api/categories', async (req, res) => {
   const category = req.body.category;
 
   try {
-    const result = await pool.query('SELECT * FROM osint.categories');
+    const result = await pool.query(
+      'SELECT * FROM osint.categories WHERE category = $1',
+      [category]
+    );
     res.json(result.rows);
   } catch (err) {
     console.error('Error fetching categories:', err);

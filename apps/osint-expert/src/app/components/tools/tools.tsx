@@ -282,6 +282,7 @@ export const Tools: React.FC = () => {
                         <TableCell
                           sx={{ cursor: 'pointer' }}
                           onClick={() => {
+                            setCurrentTool(Number(tool.id));
                             setShowToolForm(true);
                           }}
                         >

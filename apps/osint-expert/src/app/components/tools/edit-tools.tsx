@@ -1,3 +1,4 @@
+import { apiGet } from '@osint-expert/data';
 import React, { useEffect } from 'react';
 
 type Tool = {
@@ -18,20 +19,23 @@ export const EditTools: React.FC<EditToolsProps> = ({ id, onClose }) => {
 
   const handleSave = () => {
     if (onClose) {
-      onClose([tool]);
+      onClose(tool ? [tool] : []);
+    }
+  };
+
+  const getTool = async (toolId: number) => {
+    try {
+      const data = await apiGet<Tool>(`/tools/${toolId}`);
+      setTool(data);
+    } catch (error) {
+      console.error('Error fetching tool:', error);
+    } finally {
+      console.log('Fetch tool attempt finished.');
     }
   };
 
   useEffect(() => {
-    if (currentTool) {
-      // Fetch the tool details based on the id
-      fetch(`/api/tools/${currentTool}`)
-        .then((res) => res.json())
-        .then((data) => setTool(data))
-        .catch((err) => console.error('Error fetching tool:', err));
-    } else {
-      setTool({ id: 0, tool: '', description: '', url: '' });
-    }
+    getTool(currentTool);
   }, [currentTool]);
 
   return (
@@ -56,8 +60,15 @@ export const EditTools: React.FC<EditToolsProps> = ({ id, onClose }) => {
         <input
           id="tool-name"
           type="text"
-          value={tool.tool}
-          onChange={(e) => setTool({ ...tool, tool: e.target.value })}
+          value={tool?.tool ?? ''}
+          onChange={(e) =>
+            setTool({
+              id: tool?.id ?? currentTool,
+              tool: e.target.value,
+              description: tool?.description ?? '',
+              url: tool?.url ?? '',
+            })
+          }
           style={{
             width: '100%',
             padding: '0.5rem',
@@ -69,14 +80,28 @@ export const EditTools: React.FC<EditToolsProps> = ({ id, onClose }) => {
       <div style={{ marginBottom: '1rem' }}>
         <label
           htmlFor="tool-description"
-          style={{ display: 'block', fontWeight: 500, marginBottom: 4 }}
+          onChange={(e) =>
+            setTool({
+              id: tool?.id ?? currentTool,
+              tool: tool?.tool ?? '',
+              description: (e.target as HTMLTextAreaElement).value,
+              url: tool?.url ?? '',
+            })
+          }
         >
           Description:
         </label>
         <textarea
           id="tool-description"
-          value={tool.description}
-          onChange={(e) => setTool({ ...tool, description: e.target.value })}
+          value={tool?.description ?? ''}
+          onChange={(e) =>
+            setTool({
+              id: tool?.id ?? currentTool,
+              tool: tool?.tool ?? '',
+              description: e.target.value,
+              url: tool?.url ?? '',
+            })
+          }
           rows={4}
           style={{
             width: '100%',
@@ -97,8 +122,15 @@ export const EditTools: React.FC<EditToolsProps> = ({ id, onClose }) => {
         <input
           id="tool-url"
           type="text"
-          value={tool.url}
-          onChange={(e) => setTool({ ...tool, url: e.target.value })}
+          value={tool?.url ?? ''}
+          onChange={(e) =>
+            setTool({
+              id: tool?.id ?? currentTool,
+              tool: tool?.tool ?? '',
+              description: tool?.description ?? '',
+              url: e.target.value,
+            })
+          }
           style={{
             width: '100%',
             padding: '0.5rem',
