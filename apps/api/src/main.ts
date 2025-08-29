@@ -2,6 +2,7 @@ import cors from 'cors';
 import express from 'express';
 import * as path from 'path';
 import { Pool } from 'pg';
+import toolsRoutes from './routes/toolsRoutes';
 
 const app = express();
 
@@ -11,6 +12,8 @@ app.use(
     credentials: true,
   })
 );
+
+app.use('/api', toolsRoutes);
 
 app.use(express.json());
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
@@ -30,18 +33,7 @@ app.get('/api/tools/:id', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch tool' });
   }
 });
-
-// Get all tools
-app.get('/api/tools', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM osint.tools');
-    res.json(result.rows);
-  } catch (err) {
-    console.error('Error fetching tools:', err);
-    res.status(500).json({ error: 'Failed to fetch tools' });
-  }
-});
-
+/*
 // Create a new tool
 app.post('/api/tools', async (req, res) => {
   const { tool, description } = req.body;
@@ -76,7 +68,7 @@ app.put('/api/tools/:id', async (req, res) => {
     res.status(500).json({ error: 'Failed to update tool' });
   }
 });
-
+*/
 // Get counters
 app.get('/api/counters', async (req, res) => {
   try {
