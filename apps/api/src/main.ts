@@ -1,7 +1,6 @@
 import cors from 'cors';
 import express from 'express';
 import * as path from 'path';
-import { Pool } from 'pg';
 import alertsRoutes from './routes/alertsRoutes';
 import categoriesRoutes from './routes/categoriesRoutes';
 import codesRoutes from './routes/codesRoutes';
@@ -32,10 +31,7 @@ app.use('/api', toolsRoutes);
 app.use(express.json());
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
-
+/*
 // Get all weblinks
 app.get('/api/weblinks', async (req, res) => {
   try {
@@ -94,6 +90,7 @@ app.get('/api/stage-weblinks', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch stage-weblinks' });
   }
 });
+*/
 
 const port = process.env.PORT || 3333;
 const server = app.listen(port, () => {
