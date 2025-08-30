@@ -1,8 +1,6 @@
 import axios, { AxiosRequestConfig } from 'axios';
 
 const apiBaseUrl = 'http://localhost:3333/api';
-//export const apiBaseUrl = process.env.API_BASE_URL!;
-//export const featureFlag = process.env.FEATURE_FLAG === 'true';
 
 // Generic GET request
 export async function apiGet<T>(

@@ -39,10 +39,7 @@ export default function Categories() {
   };
 
   const saveCategory = async (category: Category) => {
-    // Implement save logic here, e.g., POST or PUT to your API
     await apiPost('/categories', category);
-    // After saving, refresh the categories list
-    await getCategories();
   };
 
   // Add a new category
@@ -57,7 +54,6 @@ export default function Categories() {
     }
   };
 
-  // Remove a category
   const handleRemoveCategory = (id: string) => {
     setCategories(categories.filter((cat) => cat.id !== id));
     if (selectedCategoryId === id) setSelectedCategoryId(null);
@@ -96,7 +92,6 @@ export default function Categories() {
     }
   };
 
-  // Remove a code from category
   const handleRemoveCode = (catId: string, codeId: string) => {
     /*    setCategories(
       categories.map((cat) =>

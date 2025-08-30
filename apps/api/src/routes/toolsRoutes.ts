@@ -1,5 +1,4 @@
-// src/routes/exampleRoutes.ts
-import { Router } from 'express';
+import express, { Router } from 'express';
 import {
   createTool,
   getTools,
@@ -7,6 +6,7 @@ import {
 } from '../controllers/toolsController';
 
 const router = Router();
+router.use(express.json());
 
 router.get('/tools', getTools);
 router.post('/tools', createTool);
