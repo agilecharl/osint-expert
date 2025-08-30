@@ -2,7 +2,13 @@ import cors from 'cors';
 import express from 'express';
 import * as path from 'path';
 import { Pool } from 'pg';
+import alertsRoutes from './routes/alertsRoutes';
 import categoriesRoutes from './routes/categoriesRoutes';
+import codesRoutes from './routes/codesRoutes';
+import findingsRoutes from './routes/findingsRoutes';
+import generalRoutes from './routes/generalRoutes';
+import messagesRoutes from './routes/messagesRoutes';
+import targetsRoutes from './routes/targetsRoutes';
 import toolsRoutes from './routes/toolsRoutes';
 
 const app = express();
@@ -14,8 +20,14 @@ app.use(
   })
 );
 
-app.use('/api', toolsRoutes);
+app.use('/api', alertsRoutes);
 app.use('/api', categoriesRoutes);
+app.use('/api', codesRoutes);
+app.use('/api', findingsRoutes);
+app.use('/api', messagesRoutes);
+app.use('/api', generalRoutes);
+app.use('/api', targetsRoutes);
+app.use('/api', toolsRoutes);
 
 app.use(express.json());
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
@@ -72,7 +84,7 @@ app.put('/api/tools/:id', async (req, res) => {
 });
 */
 // Get counters
-app.get('/api/counters', async (req, res) => {
+/*app.get('/api/counters', async (req, res) => {
   try {
     const alertsResult = await pool.query('SELECT COUNT(*) FROM osint.alerts');
     const targetsResult = await pool.query(
@@ -96,7 +108,7 @@ app.get('/api/counters', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch tool counters' });
   }
 });
-
+*/
 // Get all targets
 /*app.get('/api/targets', async (req, res) => {
   try {
@@ -224,7 +236,7 @@ app.get('/api/categories/:id/codes', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch codes for category' });
   }
 });
-*/
+
 app.get('/api/codes', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM osint.codes');
@@ -248,7 +260,7 @@ app.post('/api/codes', async (req, res) => {
     res.status(500).json({ error: 'Failed to create code' });
   }
 });
-
+*/
 const port = process.env.PORT || 3333;
 const server = app.listen(port, () => {
   console.log(`Listening at http://localhost:${port}/api`);

@@ -32,21 +32,40 @@ const Dashboard: React.FC = () => {
   };
 
   const updateDashboard = async () => {
-    await apiGet('/counters')
+    await apiGet('/alerts/count')
       .then((data) => {
-        const toolsData = data as {
-          alerts: any;
-          targets: any;
-          findings: any;
-          messages: any;
-        };
-        setAlertCount(toolsData.alerts.length);
-        setTargetCount(toolsData.targets.length);
-        setFindingCount(toolsData.findings.length);
-        setMessageCount(toolsData.messages.length);
+        const alertsData = data as { count: number };
+        setAlertCount(alertsData.count);
       })
       .catch((error) => {
-        console.error('Error fetching tools:', error);
+        console.error('Error fetching alerts:', error);
+      });
+
+    await apiGet('/findings/count')
+      .then((data) => {
+        const findingsData = data as { count: number };
+        setFindingCount(findingsData.count);
+      })
+      .catch((error) => {
+        console.error('Error fetching findings:', error);
+      });
+
+    await apiGet('/general/count')
+      .then((data) => {
+        const messagesData = data as { count: number };
+        setMessageCount(messagesData.count);
+      })
+      .catch((error) => {
+        console.error('Error fetching messages:', error);
+      });
+
+    await apiGet('/targets/count')
+      .then((data) => {
+        const targetsData = data as { count: number };
+        setTargetCount(targetsData.count);
+      })
+      .catch((error) => {
+        console.error('Error fetching targets:', error);
       });
   };
 
