@@ -9,7 +9,8 @@ export interface Code {
 
 export const fetchCodes = async (
   id?: string,
-  code?: string
+  code?: string,
+  category?: string
 ): Promise<Code[]> => {
   let query = 'SELECT * FROM codes';
   const params: any[] = [];
@@ -22,6 +23,10 @@ export const fetchCodes = async (
   if (code) {
     conditions.push('code = $' + (params.length + 1));
     params.push(code);
+  }
+  if (category) {
+    conditions.push('category = $' + (params.length + 1));
+    params.push(category);
   }
   if (conditions.length) {
     query += ' WHERE ' + conditions.join(' AND ');

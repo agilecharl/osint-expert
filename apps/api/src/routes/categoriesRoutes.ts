@@ -10,7 +10,7 @@ import {
 const router = Router();
 router.use(express.json());
 
-router.get('/categories/:1/codes', getCategoryCodes);
+router.get('/categories/:category/codes', getCategoryCodes);
 router.get('/categories', getCategories);
 router.post('/categories', newCategory);
 router.put('/categories/:id', updateExistingCategory);

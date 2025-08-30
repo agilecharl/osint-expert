@@ -19,7 +19,7 @@ export const getCategories = async (req: Request, res: Response) => {
 
 export const getCategoryCodes = async (req: Request, res: Response) => {
   try {
-    const codes = await fetchCodes();
+    const codes = await fetchCodes('', '', req.params.category);
     res.json(codes);
   } catch (error) {
     console.error('Error in getCodes:', error);
