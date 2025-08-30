@@ -2,6 +2,7 @@ import cors from 'cors';
 import express from 'express';
 import * as path from 'path';
 import { Pool } from 'pg';
+import categoriesRoutes from './routes/categoriesRoutes';
 import toolsRoutes from './routes/toolsRoutes';
 
 const app = express();
@@ -14,6 +15,7 @@ app.use(
 );
 
 app.use('/api', toolsRoutes);
+app.use('/api', categoriesRoutes);
 
 app.use(express.json());
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
@@ -21,7 +23,7 @@ app.use('/assets', express.static(path.join(__dirname, 'assets')));
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
-
+/*
 app.get('/api/tools/:id', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM osint.tools WHERE id = $1', [
@@ -33,7 +35,7 @@ app.get('/api/tools/:id', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch tool' });
   }
 });
-/*
+
 // Create a new tool
 app.post('/api/tools', async (req, res) => {
   const { tool, description } = req.body;
@@ -96,7 +98,7 @@ app.get('/api/counters', async (req, res) => {
 });
 
 // Get all targets
-app.get('/api/targets', async (req, res) => {
+/*app.get('/api/targets', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM osint.targets');
     res.json(result.rows);
@@ -120,7 +122,7 @@ app.post('/api/targets', async (req, res) => {
     res.status(500).json({ error: 'Failed to create target' });
   }
 });
-
+*/
 // Get all weblinks
 app.get('/api/weblinks', async (req, res) => {
   try {
@@ -179,7 +181,7 @@ app.get('/api/stage-weblinks', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch stage-weblinks' });
   }
 });
-
+/*
 app.get('/api/categories', async (req, res) => {
   const category = req.body.category;
 
@@ -222,7 +224,7 @@ app.get('/api/categories/:id/codes', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch codes for category' });
   }
 });
-
+*/
 app.get('/api/codes', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM osint.codes');

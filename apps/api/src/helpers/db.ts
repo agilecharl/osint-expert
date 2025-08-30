@@ -14,8 +14,6 @@ export async function pgQuery<T = any>(
   text: string,
   params?: any[]
 ): Promise<T[]> {
-  // Ensure dotenv is loaded at the top of your entry file (e.g., index.ts or app.ts)
-  // import 'dotenv/config';
   const client = await pgPool.connect();
   try {
     const res = await client.query(text, params);
