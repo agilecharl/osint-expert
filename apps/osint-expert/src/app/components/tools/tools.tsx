@@ -56,6 +56,31 @@ export const Tools: React.FC = () => {
 
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
+  const filteredTools = tools.filter(
+    (tool) =>
+      tool.tool.toLowerCase().includes(search.toLowerCase()) ||
+      tool.description.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const sortedTools = [...filteredTools].sort((a, b) => {
+    const key = sort.key;
+    const aValue = a[key] ?? '';
+    const bValue = b[key] ?? '';
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      if (sort.direction === 'asc') {
+        return aValue.localeCompare(bValue);
+      } else {
+        return bValue.localeCompare(aValue);
+      }
+    }
+    return 0;
+  });
+
+  const totalPages =
+    pageSize === filteredTools.length
+      ? 1
+      : Math.ceil(filteredTools.length / pageSize);
+
   const fetchTools = async () => {
     await apiGet<Tool[]>('/tools')
       .then((data: Tool[]) => {
@@ -92,30 +117,13 @@ export const Tools: React.FC = () => {
     };
   }, [refreshInterval]);
 
-  const filteredTools = tools.filter(
-    (tool) =>
-      tool.tool.toLowerCase().includes(search.toLowerCase()) ||
-      tool.description.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const sortedTools = [...filteredTools].sort((a, b) => {
-    const key = sort.key;
-    const aValue = a[key] ?? '';
-    const bValue = b[key] ?? '';
-    if (typeof aValue === 'string' && typeof bValue === 'string') {
-      if (sort.direction === 'asc') {
-        return aValue.localeCompare(bValue);
-      } else {
-        return bValue.localeCompare(aValue);
-      }
+  useEffect(() => {
+    if (showToolForm) {
+      setRefreshInterval(1000000);
+    } else {
+      setRefreshInterval(REFRESH_INTERVALS[0].value);
     }
-    return 0;
-  });
-
-  const totalPages =
-    pageSize === filteredTools.length
-      ? 1
-      : Math.ceil(filteredTools.length / pageSize);
+  }, [showToolForm]);
 
   return (
     <div>

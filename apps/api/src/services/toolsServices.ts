@@ -7,8 +7,13 @@ export interface Tool {
   category?: string;
 }
 
-export const fetchTools = async (): Promise<Tool[]> => {
-  const tools = await pgQuery('SELECT * FROM tools');
+export const fetchTools = async (id?: string): Promise<Tool[]> => {
+  const query = id
+    ? 'SELECT * FROM tools WHERE id = $1'
+    : 'SELECT * FROM tools';
+  const params = id ? [id] : [];
+  const tools = await pgQuery(query, params);
+
   return tools;
 };
 

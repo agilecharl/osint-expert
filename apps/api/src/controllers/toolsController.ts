@@ -12,10 +12,8 @@ export const getTools = async (req: Request, res: Response) => {
 };
 
 export const getToolById = async (req: Request, res: Response) => {
-  const { id } = req.params;
   try {
-    const tools = await fetchTools();
-    const tool = tools.find((t) => t.id === id);
+    const tool = await fetchTools(req.params.id);
     if (tool) {
       res.json(tool);
     } else {

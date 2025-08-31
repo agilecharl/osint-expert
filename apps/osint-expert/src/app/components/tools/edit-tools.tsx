@@ -1,5 +1,5 @@
 import { apiGet } from '@osint-expert/data';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
 type Tool = {
   id: number;
@@ -14,7 +14,7 @@ type EditToolsProps = {
 };
 
 export const EditTools: React.FC<EditToolsProps> = ({ id, onClose }) => {
-  const [tool, setTool] = React.useState<Tool>();
+  const [tool, setTool] = useState<Tool | undefined>();
   const currentTool = id || 0;
 
   const handleSave = () => {
@@ -26,17 +26,20 @@ export const EditTools: React.FC<EditToolsProps> = ({ id, onClose }) => {
   const getTool = async (toolId: number) => {
     try {
       const data = await apiGet<Tool>(`/tools/${toolId}`);
+      console.log('Fetched tool data:', data);
       setTool(data);
     } catch (error) {
       console.error('Error fetching tool:', error);
-    } finally {
-      console.log('Fetch tool attempt finished.');
     }
   };
 
   useEffect(() => {
     getTool(currentTool);
   }, [currentTool]);
+
+  useEffect(() => {
+    console.log(tool);
+  }, [tool]);
 
   return (
     <div
