@@ -35,6 +35,7 @@ export const updateTool = async (
   let index = 1;
 
   for (const [key, value] of Object.entries(tool)) {
+    if (key === 'id') continue; // Prevent updating the id
     fields.push(`${key} = $${index}`);
     values.push(value);
     index++;

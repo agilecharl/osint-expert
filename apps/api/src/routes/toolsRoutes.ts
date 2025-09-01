@@ -1,9 +1,9 @@
 import express, { Router } from 'express';
 import {
-  createTool,
   getToolById,
   getTools,
-  updateTool,
+  newTool,
+  setTool,
 } from '../controllers/toolsController';
 
 const router = Router();
@@ -11,7 +11,7 @@ router.use(express.json());
 
 router.get('/tools/:id', getToolById);
 router.get('/tools', getTools);
-router.post('/tools', createTool);
-router.put('/tools/:id', updateTool);
+router.post('/tools', newTool);
+router.put('/tools/:id', setTool);
 
 export default router;

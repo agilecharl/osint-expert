@@ -1,4 +1,4 @@
-import { apiGet } from '@osint-expert/data';
+import { apiGet, apiPut } from '@osint-expert/data';
 import React, { useEffect, useState } from 'react';
 
 type Tool = {
@@ -17,9 +17,11 @@ export const EditTools: React.FC<EditToolsProps> = ({ id, onClose }) => {
   const [tool, setTool] = useState<Tool | undefined>();
   const currentTool = id || 0;
 
-  const handleSave = () => {
-    if (onClose) {
-      onClose(tool ? [tool] : []);
+  const handleSave = async () => {
+    if (onClose && tool) {
+      await apiPut<Tool, Tool>('/tools/' + currentTool, tool).then(() => {
+        onClose([tool]);
+      });
     }
   };
 
@@ -37,10 +39,6 @@ export const EditTools: React.FC<EditToolsProps> = ({ id, onClose }) => {
   useEffect(() => {
     getTool(currentTool);
   }, [currentTool]);
-
-  useEffect(() => {
-    console.log(tool);
-  }, [tool]);
 
   return (
     <div

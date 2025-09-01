@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { fetchTools } from '../services/toolsServices';
+import { createTool, fetchTools, updateTool } from '../services/toolsServices';
 
 export const getTools = async (req: Request, res: Response) => {
   try {
@@ -25,9 +25,9 @@ export const getToolById = async (req: Request, res: Response) => {
   }
 };
 
-export const createTool = async (req: Request, res: Response) => {
+export const newTool = async (req: Request, res: Response) => {
   try {
-    // Logic to create a new tool
+    await createTool(req.body);
     res.status(201).json({ message: 'Tool created successfully' });
   } catch (error) {
     console.error('Error in createTool:', error);
@@ -35,10 +35,10 @@ export const createTool = async (req: Request, res: Response) => {
   }
 };
 
-export const updateTool = async (req: Request, res: Response) => {
+export const setTool = async (req: Request, res: Response) => {
   const { id } = req.params;
   try {
-    // Logic to update the tool with the given id
+    await updateTool(id, req.body);
     res.json({ message: `Tool with id ${id} updated successfully` });
   } catch (error) {
     console.error('Error in updateTool:', error);
