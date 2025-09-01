@@ -25,9 +25,10 @@ export const EditTools: React.FC<EditToolsProps> = ({ id, onClose }) => {
 
   const getTool = async (toolId: number) => {
     try {
-      const data = await apiGet<Tool>(`/tools/${toolId}`);
-      console.log('Fetched tool data:', data);
-      setTool(data);
+      const data = await apiGet<Tool[]>(`/tools/${toolId}`);
+      if (data) {
+        setTool(data[0]);
+      }
     } catch (error) {
       console.error('Error fetching tool:', error);
     }
@@ -58,7 +59,7 @@ export const EditTools: React.FC<EditToolsProps> = ({ id, onClose }) => {
           htmlFor="tool-name"
           style={{ display: 'block', fontWeight: 500, marginBottom: 4 }}
         >
-          Tool:
+          Name:
         </label>
         <input
           id="tool-name"
